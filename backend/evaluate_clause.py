@@ -14,18 +14,6 @@ from typing import Optional
 # Note that PyMuPdf did not work well with the PDFs not keeping the paragraphs architecture and line breaks,
 # hence the use of pdf2image + pytesseract
 
-@dataclass
-class RuleHit:
-    rule_id: str  # Unique ID or reference to the rule (e.g. "R001")
-    name: str  # Human-readable rule name ("Mutuality of Protection")
-    action: str  # Result of the rule evaluation: "accept", "flag", "reject"
-    severity: str  # Severity level: "low", "medium", "high", "critical"
-    delta: float  # Score adjustment (e.g. -0.3 for reject, +0.1 for compliance)
-    explanation: str  # Short reasoning explaining why the rule was hit
-    evidence: Optional[str] = None  # (Optional) The actual clause text or extracted snippet
-    source_clause_id: Optional[str] = None  # (Optional) Link to the clause that triggered the rule hit
-
-
 def split_document(text: str, chunk_size: int = 1000, chunk_overlap: int = 200):
     """
     Splits a document into smaller chunks for processing.

@@ -1,153 +1,232 @@
 [
   {
-    "id": "R001",
-    "name": "Indefinite confidentiality duration",
-    "category": "Duration",
-    "applies_to": ["Confidentiality"],
-    "condition": "(in perpetuity|forever|without limit of time)",
+    "id": "mutuality_protection",
+    "title": "Mutuality of Protection",
+    "category": "Confidentiality Scope",
     "severity": "high",
-    "weight": 1.0,
-    "expected_action": "reject",
-    "explanation": "Confidentiality obligations should not be perpetual. Indefinite terms create unbalanced obligations.",
-    "remedy_hint": "Replace 'in perpetuity' with 'for a period of 2–5 years after disclosure'.",
+    "compliance": "The NDA should protect the confidential information of both parties equally (mutual NDA).",
+    "preferred": "Mutual NDA with symmetrical obligations for Discloser and Recipient.",
+    "red_flags": [
+      "One-way NDA protecting only one party's disclosures (except narrow regulatory scenarios).",
+      "Asymmetrical confidentiality obligations."
+    ],
+    "detection_hints": {
+      "keywords_any": ["mutual", "both parties", "each party", "reciprocal"],
+      "anti_keywords_any": ["one-way", "unilateral", "only the Discloser", "only Recipient"]
+    },
     "examples": {
-      "trigger": "The Recipient shall maintain confidentiality forever.",
-      "compliant": "The Recipient shall maintain confidentiality for 3 years after disclosure."
+      "compliant": "Each Party agrees to maintain the confidentiality of information disclosed by the other Party.",
+      "non_compliant": "Recipient shall maintain the confidentiality of Discloser's information."
     }
   },
   {
-    "id": "R002",
-    "name": "Reasonable confidentiality term",
-    "category": "Duration",
-    "applies_to": ["Confidentiality"],
-    "condition": "(for (two|three|2|3) years)",
-    "severity": "low",
-    "weight": 1.0,
-    "expected_action": "approve",
-    "explanation": "A confidentiality term of 2–3 years is standard and acceptable.",
-    "compliance_hint": "This NDA meets duration requirements (>2 years).",
+    "id": "exceptions_prior_knowledge",
+    "title": "Standard Exceptions – Prior Knowledge",
+    "category": "Confidentiality Exceptions",
+    "severity": "high",
+    "compliance": "Exceptions must include information already known to the Recipient before disclosure.",
+    "red_flags": ["Omission of prior knowledge exception.", "Ambiguous drafting that weakens the prior knowledge carve-out."],
+    "detection_hints": {"keywords_any": ["already known", "known to Recipient", "lawfully possessed", "prior to disclosure"]},
     "examples": {
-      "trigger": "Obligations shall remain in effect for three (3) years from disclosure."
+      "compliant": "Information already known to Recipient without restriction prior to disclosure.",
+      "non_compliant": "No reference to information known by Recipient prior to disclosure."
     }
   },
   {
-    "id": "R003",
-    "name": "Broad definition of Confidential Information",
-    "category": "Scope",
-    "applies_to": ["Confidentiality"],
-    "condition": "(any and all information|all information disclosed)",
+    "id": "exceptions_independent_dev",
+    "title": "Standard Exceptions – Independent Development",
+    "category": "Confidentiality Exceptions",
+    "severity": "high",
+    "compliance": "Exceptions must include information independently developed by Recipient without use of Confidential Information.",
+    "red_flags": ["Omission of independent development exception."],
+    "detection_hints": {"keywords_any": ["independently developed", "independent development", "without use of Confidential Information"]},
+    "examples": {
+      "compliant": "Information independently developed by Recipient without use of Confidential Information.",
+      "non_compliant": "No mention of independent development."
+    }
+  },
+  {
+    "id": "exceptions_third_party",
+    "title": "Standard Exceptions – Third-Party Source",
+    "category": "Confidentiality Exceptions",
+    "severity": "high",
+    "compliance": "Exceptions must include information lawfully received from a third party without breach of obligation.",
+    "red_flags": ["Omission of third-party source exception.", "Language limiting lawful third-party receipt unreasonably."],
+    "detection_hints": {"keywords_any": ["third party", "lawfully received", "without breach of an obligation of confidentiality"]},
+    "examples": {
+      "compliant": "Information rightfully received by Recipient from a third party without restriction.",
+      "non_compliant": "No mention of third-party lawful sources."
+    }
+  },
+  {
+    "id": "exceptions_public_domain",
+    "title": "Standard Exceptions – Public Domain",
+    "category": "Confidentiality Exceptions",
+    "severity": "high",
+    "compliance": "Exceptions must include information that is or becomes publicly available without fault of Recipient.",
+    "red_flags": ["Omission of public domain exception.", "Ambiguity around 'without fault'."],
+    "detection_hints": {"keywords_any": ["publicly available", "public domain", "without fault of Recipient"]},
+    "examples": {
+      "compliant": "Information that is or becomes publicly available without breach of this Agreement.",
+      "non_compliant": "No public domain exception."
+    }
+  },
+  {
+    "id": "exceptions_approved_in_writing",
+    "title": "Standard Exceptions – Approved in Writing",
+    "category": "Confidentiality Exceptions",
     "severity": "medium",
-    "weight": 1.0,
-    "expected_action": "review",
-    "explanation": "Overly broad definitions may include public or trivial information.",
-    "remedy_hint": "Limit Confidential Information to non-public information marked or identified as confidential.",
+    "compliance": "Exceptions should include information approved in writing by the Discloser for release.",
+    "red_flags": ["Omission of 'approved in writing' carve-out."],
+    "detection_hints": {"keywords_any": ["approved in writing", "consent in writing", "written approval"]},
     "examples": {
-      "trigger": "‘Confidential Information’ means any and all information disclosed by Discloser."
+      "compliant": "Information approved in writing by Discloser for release.",
+      "non_compliant": "No 'approved in writing' exception."
     }
   },
   {
-    "id": "R004",
-    "name": "Mutual confidentiality obligation",
-    "category": "Reciprocity",
-    "applies_to": ["Confidentiality"],
-    "condition": "(both parties|each party|mutual confidentiality)",
-    "severity": "low",
-    "weight": 1.0,
-    "expected_action": "approve",
-    "explanation": "Mutual NDAs with symmetrical obligations are compliant and preferred.",
-    "compliance_hint": "Both parties are bound by equivalent confidentiality duties.",
+    "id": "ip_ownership_no_transfer",
+    "title": "Intellectual Property – No Transfer or Implied License",
+    "category": "IP Rights",
+    "severity": "high",
+    "compliance": "Ownership of IP remains with the original owner; NDA should state no transfer or implied license.",
+    "red_flags": ["Silence on ownership/IP.", "Any grant of license beyond evaluation use."],
+    "detection_hints": {"keywords_any": ["ownership remains", "no license", "no transfer", "intellectual property"]},
     "examples": {
-      "trigger": "Each party agrees to protect the other’s Confidential Information."
+      "compliant": "Nothing herein grants any rights or licenses by implication or otherwise.",
+      "non_compliant": "Recipient is granted a perpetual license to use the information."
     }
   },
   {
-    "id": "R005",
-    "name": "Unilateral NDA (non-mutual)",
-    "category": "Reciprocity",
-    "applies_to": ["Confidentiality"],
-    "condition": "(Discloser only|Recipient only)",
-    "severity": "medium",
-    "weight": 1.0,
-    "expected_action": "reject",
-    "explanation": "Non-mutual NDAs create asymmetrical obligations and are not acceptable unless justified.",
-    "remedy_hint": "Convert NDA to a mutual form unless justified by transaction type.",
-    "examples": {
-      "trigger": "Only the Recipient shall maintain confidentiality."
-    }
-  },
-  {
-    "id": "R006",
-    "name": "Recipient allowed to sublicense or transfer",
-    "category": "Sublicense",
-    "applies_to": ["License", "IP", "Data Processing"],
-    "condition": "(sublicense|sub-license|authorize third parties)",
+    "id": "term_min_12_months",
+    "title": "Term – Minimum 12 Months Survival",
+    "category": "Term",
     "severity": "critical",
-    "weight": 1.0,
-    "expected_action": "reject",
-    "explanation": "Recipient should not be allowed to sublicense or transfer rights without prior written consent.",
-    "remedy_hint": "Add 'Recipient shall not sublicense or transfer without Discloser’s prior written approval'.",
+    "compliance": "Confidentiality obligations must survive for at least 12 months after termination/expiration.",
+    "preferred": "2–3 years survival is preferred.",
+    "red_flags": ["Survival period shorter than 12 months.", "Obligations end upon termination of the NDA."],
+    "detection_hints": {"keywords_any": ["12 months", "1 year", "two years", "three years", "survive termination", "survival"]},
     "examples": {
-      "trigger": "Recipient may sublicense its rights under this Agreement."
+      "compliant": "Obligations shall survive for two (2) years following termination.",
+      "non_compliant": "Obligations terminate upon termination of this Agreement."
     }
   },
   {
-    "id": "R007",
-    "name": "Approved jurisdiction",
-    "category": "Jurisdiction",
-    "applies_to": ["Governing Law"],
-    "condition": "(France|European Union|England|Wales)",
+    "id": "term_not_expire_on_termination",
+    "title": "Term – Must Not Expire Upon Termination",
+    "category": "Term",
+    "severity": "critical",
+    "compliance": "Confidentiality obligations must not expire immediately upon termination of the NDA.",
+    "red_flags": ["Language tying confidentiality to the life of the NDA without survival."],
+    "detection_hints": {"keywords_any": ["expire upon termination", "cease upon termination"]},
+    "examples": {
+      "compliant": "Obligations survive termination for at least 12 months.",
+      "non_compliant": "Obligations end upon termination."
+    }
+  },
+  {
+    "id": "indemnity_prohibited",
+    "title": "Indemnities Prohibited",
+    "category": "Remedies/Liability",
+    "severity": "critical",
+    "compliance": "NDAs must not create indemnity obligations.",
+    "red_flags": ["Any indemnify/hold harmless language, even if 'narrow'."],
+    "detection_hints": {"keywords_any": ["indemnify", "indemnification", "hold harmless"]},
+    "examples": {
+      "compliant": "No indemnity obligations are created by this Agreement.",
+      "non_compliant": "Recipient shall indemnify Discloser for any breach."
+    }
+  },
+  {
+    "id": "liquidated_damages_prohibited",
+    "title": "Liquidated Damages / Penalties Prohibited",
+    "category": "Remedies/Liability",
+    "severity": "critical",
+    "compliance": "No monetary penalties or liquidated damages should be specified in the NDA.",
+    "red_flags": ["Fixed monetary penalties", "Liquidated damages amounts"],
+    "detection_hints": {"keywords_any": ["liquidated damages", "penalty", "penalties", "monetary penalty"]},
+    "examples": {
+      "compliant": "The Parties acknowledge equitable remedies may be appropriate.",
+      "non_compliant": "A breach shall result in liquidated damages of $500,000."
+    }
+  },
+  {
+    "id": "equitable_remedies_ok",
+    "title": "Equitable Remedies Acceptable",
+    "category": "Remedies/Liability",
     "severity": "low",
-    "weight": 1.0,
-    "expected_action": "approve",
-    "explanation": "Jurisdiction within EU or UK is acceptable under company policy.",
-    "compliance_hint": "This NDA uses an approved jurisdiction.",
+    "compliance": "Allowing equitable remedies (injunction, specific performance) is acceptable.",
+    "red_flags": [],
+    "detection_hints": {"keywords_any": ["equitable relief", "injunction", "specific performance"]},
     "examples": {
-      "trigger": "This Agreement shall be governed by the laws of France."
+      "compliant": "Discloser shall be entitled to equitable relief, including injunction.",
+      "non_compliant": "N/A (equitable remedies are acceptable)."
     }
   },
   {
-    "id": "R008",
-    "name": "Foreign or unapproved jurisdiction",
-    "category": "Jurisdiction",
-    "applies_to": ["Governing Law"],
-    "condition": "(state of California|New York|Delaware|Singapore)",
-    "severity": "high",
-    "weight": 1.0,
-    "expected_action": "reject",
-    "explanation": "Unapproved jurisdictions introduce legal complexity and should be avoided.",
-    "remedy_hint": "Replace with 'laws of France' or another EU jurisdiction.",
-    "examples": {
-      "trigger": "This Agreement shall be governed by the laws of California."
-    }
-  },
-  {
-    "id": "R009",
-    "name": "Exception list present",
-    "category": "Exceptions",
-    "applies_to": ["Confidentiality"],
-    "condition": "(publicly available|previously known|independently developed|required by law)",
-    "severity": "low",
-    "weight": 1.0,
-    "expected_action": "approve",
-    "explanation": "Clause contains standard confidentiality exceptions, making it compliant.",
-    "compliance_hint": "NDA includes standard exceptions (public info, prior knowledge, legal requirement).",
-    "examples": {
-      "trigger": "Confidential Information does not include information that is publicly available or required to be disclosed by law."
-    }
-  },
-  {
-    "id": "R010",
-    "name": "No exceptions to confidentiality",
-    "category": "Exceptions",
-    "applies_to": ["Confidentiality"],
-    "condition": "(?i)(Confidential Information does not include)",
+    "id": "data_protection_silent",
+    "title": "Data Protection – NDA Should Be Silent",
+    "category": "Data Protection",
     "severity": "medium",
-    "weight": 1.0,
-    "expected_action": "review",
-    "explanation": "Lack of clear exceptions can create unfair obligations; should be verified manually.",
-    "remedy_hint": "Add standard confidentiality exceptions (public info, prior knowledge, legal compulsion).",
+    "compliance": "NDA should not incorporate DPAs or GDPR-specific terms; if personal data is anticipated, address via a separate DPA.",
+    "red_flags": ["NDA embeds DPA/GDPR obligations.", "Cross-references to a DPA within the NDA."],
+    "detection_hints": {"keywords_any": ["GDPR", "data processing agreement", "DPA", "personal data", "processor"]},
     "examples": {
-      "trigger": "Recipient must treat all information as confidential, without exception."
+      "compliant": "No DPA terms included in the NDA; separate DPA to be executed if needed.",
+      "non_compliant": "This NDA incorporates the Company's Data Processing Agreement."
+    }
+  },
+  {
+    "id": "non_solicitation_not_allowed",
+    "title": "Non-Solicitation Not Appropriate in NDA",
+    "category": "Commercial Restrictions",
+    "severity": "medium",
+    "compliance": "NDA should not contain recruiting or non-solicitation restrictions; such terms belong in commercial agreements.",
+    "red_flags": ["Any non-solicit or no-hire restriction within the NDA."],
+    "detection_hints": {"keywords_any": ["non-solicit", "non solicitation", "no-hire", "recruit", "employment of"]},
+    "examples": {
+      "compliant": "No recruiting restrictions in NDA.",
+      "non_compliant": "Neither Party shall solicit for employment any employee of the other Party for two years."
+    }
+  },
+  {
+    "id": "governing_law_approved_list",
+    "title": "Governing Law – Approved Jurisdictions Only",
+    "category": "Governing Law",
+    "severity": "critical",
+    "compliance": "Governing law/jurisdiction must be one of: Delaware (DE), New York (NY), California (CA), England and Wales (UK), Singapore (SG).",
+    "preferred": "NY or DE commonly preferred; others on the list acceptable.",
+    "red_flags": ["Any governing law outside the approved list (e.g., France, Germany, Hong Kong)."],
+    "detection_hints": {"keywords_any": ["Delaware", "New York", "California", "England and Wales", "Singapore"]},
+    "examples": {
+      "compliant": "This Agreement is governed by the laws of the State of New York.",
+      "non_compliant": "This Agreement is governed by the laws of Germany."
+    }
+  },
+  {
+    "id": "no_assignment_overbroad",
+    "title": "Assignment – Do Not Block Corporate Transactions",
+    "category": "Miscellaneous",
+    "severity": "medium",
+    "compliance": "No-assignment clauses should not prevent M&A or internal restructuring.",
+    "red_flags": ["Absolute prohibitions on assignment without carve-outs for corporate transactions."],
+    "detection_hints": {"keywords_any": ["assignment", "assign", "transfer", "change of control", "merger", "reorganization"]},
+    "examples": {
+      "compliant": "No assignment without consent, except in connection with merger, reorganization, or sale of substantially all assets.",
+      "non_compliant": "Neither party may assign this Agreement under any circumstance."
+    }
+  },
+  {
+    "id": "residual_knowledge_exclusion",
+    "title": "Residual Knowledge – Should Not Be Overbroad",
+    "category": "Confidentiality Scope",
+    "severity": "medium",
+    "compliance": "Confidential information should not be defined so broadly as to include residual knowledge in employees’ unaided memory.",
+    "red_flags": ["Definitions that capture residual knowledge learned and retained in unaided memory."],
+    "detection_hints": {"keywords_any": ["residual knowledge", "unaided memory", "residuals"]},
+    "examples": {
+      "compliant": "This Agreement does not restrict information retained in unaided memory.",
+      "non_compliant": "Confidential Information includes any information retained in memory by Recipient’s personnel."
     }
   }
 ]
