@@ -1,0 +1,153 @@
+[
+  {
+    "id": "R001",
+    "name": "Indefinite confidentiality duration",
+    "category": "Duration",
+    "applies_to": ["Confidentiality"],
+    "condition": "(in perpetuity|forever|without limit of time)",
+    "severity": "high",
+    "weight": 1.0,
+    "expected_action": "reject",
+    "explanation": "Confidentiality obligations should not be perpetual. Indefinite terms create unbalanced obligations.",
+    "remedy_hint": "Replace 'in perpetuity' with 'for a period of 2–5 years after disclosure'.",
+    "examples": {
+      "trigger": "The Recipient shall maintain confidentiality forever.",
+      "compliant": "The Recipient shall maintain confidentiality for 3 years after disclosure."
+    }
+  },
+  {
+    "id": "R002",
+    "name": "Reasonable confidentiality term",
+    "category": "Duration",
+    "applies_to": ["Confidentiality"],
+    "condition": "(for (two|three|2|3) years)",
+    "severity": "low",
+    "weight": 1.0,
+    "expected_action": "approve",
+    "explanation": "A confidentiality term of 2–3 years is standard and acceptable.",
+    "compliance_hint": "This NDA meets duration requirements (>2 years).",
+    "examples": {
+      "trigger": "Obligations shall remain in effect for three (3) years from disclosure."
+    }
+  },
+  {
+    "id": "R003",
+    "name": "Broad definition of Confidential Information",
+    "category": "Scope",
+    "applies_to": ["Confidentiality"],
+    "condition": "(any and all information|all information disclosed)",
+    "severity": "medium",
+    "weight": 1.0,
+    "expected_action": "review",
+    "explanation": "Overly broad definitions may include public or trivial information.",
+    "remedy_hint": "Limit Confidential Information to non-public information marked or identified as confidential.",
+    "examples": {
+      "trigger": "‘Confidential Information’ means any and all information disclosed by Discloser."
+    }
+  },
+  {
+    "id": "R004",
+    "name": "Mutual confidentiality obligation",
+    "category": "Reciprocity",
+    "applies_to": ["Confidentiality"],
+    "condition": "(both parties|each party|mutual confidentiality)",
+    "severity": "low",
+    "weight": 1.0,
+    "expected_action": "approve",
+    "explanation": "Mutual NDAs with symmetrical obligations are compliant and preferred.",
+    "compliance_hint": "Both parties are bound by equivalent confidentiality duties.",
+    "examples": {
+      "trigger": "Each party agrees to protect the other’s Confidential Information."
+    }
+  },
+  {
+    "id": "R005",
+    "name": "Unilateral NDA (non-mutual)",
+    "category": "Reciprocity",
+    "applies_to": ["Confidentiality"],
+    "condition": "(Discloser only|Recipient only)",
+    "severity": "medium",
+    "weight": 1.0,
+    "expected_action": "reject",
+    "explanation": "Non-mutual NDAs create asymmetrical obligations and are not acceptable unless justified.",
+    "remedy_hint": "Convert NDA to a mutual form unless justified by transaction type.",
+    "examples": {
+      "trigger": "Only the Recipient shall maintain confidentiality."
+    }
+  },
+  {
+    "id": "R006",
+    "name": "Recipient allowed to sublicense or transfer",
+    "category": "Sublicense",
+    "applies_to": ["License", "IP", "Data Processing"],
+    "condition": "(sublicense|sub-license|authorize third parties)",
+    "severity": "critical",
+    "weight": 1.0,
+    "expected_action": "reject",
+    "explanation": "Recipient should not be allowed to sublicense or transfer rights without prior written consent.",
+    "remedy_hint": "Add 'Recipient shall not sublicense or transfer without Discloser’s prior written approval'.",
+    "examples": {
+      "trigger": "Recipient may sublicense its rights under this Agreement."
+    }
+  },
+  {
+    "id": "R007",
+    "name": "Approved jurisdiction",
+    "category": "Jurisdiction",
+    "applies_to": ["Governing Law"],
+    "condition": "(France|European Union|England|Wales)",
+    "severity": "low",
+    "weight": 1.0,
+    "expected_action": "approve",
+    "explanation": "Jurisdiction within EU or UK is acceptable under company policy.",
+    "compliance_hint": "This NDA uses an approved jurisdiction.",
+    "examples": {
+      "trigger": "This Agreement shall be governed by the laws of France."
+    }
+  },
+  {
+    "id": "R008",
+    "name": "Foreign or unapproved jurisdiction",
+    "category": "Jurisdiction",
+    "applies_to": ["Governing Law"],
+    "condition": "(state of California|New York|Delaware|Singapore)",
+    "severity": "high",
+    "weight": 1.0,
+    "expected_action": "reject",
+    "explanation": "Unapproved jurisdictions introduce legal complexity and should be avoided.",
+    "remedy_hint": "Replace with 'laws of France' or another EU jurisdiction.",
+    "examples": {
+      "trigger": "This Agreement shall be governed by the laws of California."
+    }
+  },
+  {
+    "id": "R009",
+    "name": "Exception list present",
+    "category": "Exceptions",
+    "applies_to": ["Confidentiality"],
+    "condition": "(publicly available|previously known|independently developed|required by law)",
+    "severity": "low",
+    "weight": 1.0,
+    "expected_action": "approve",
+    "explanation": "Clause contains standard confidentiality exceptions, making it compliant.",
+    "compliance_hint": "NDA includes standard exceptions (public info, prior knowledge, legal requirement).",
+    "examples": {
+      "trigger": "Confidential Information does not include information that is publicly available or required to be disclosed by law."
+    }
+  },
+  {
+    "id": "R010",
+    "name": "No exceptions to confidentiality",
+    "category": "Exceptions",
+    "applies_to": ["Confidentiality"],
+    "condition": "(?i)(Confidential Information does not include)",
+    "severity": "medium",
+    "weight": 1.0,
+    "expected_action": "review",
+    "explanation": "Lack of clear exceptions can create unfair obligations; should be verified manually.",
+    "remedy_hint": "Add standard confidentiality exceptions (public info, prior knowledge, legal compulsion).",
+    "examples": {
+      "trigger": "Recipient must treat all information as confidential, without exception."
+    }
+  }
+]
