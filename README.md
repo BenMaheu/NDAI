@@ -234,6 +234,86 @@ curl http://localhost:5000/reports/investor_nda.pdf_report.json
 ```
 
 ---
+## Database Schema (PostgreSQL)
+
+### Table `users`
+| column     | type          | notes          |
+| ---------- | ------------- | -------------- |
+| id         | UUID (PK)     | unique user id |
+| email      | text (unique) | optional login |
+| name       | text          |                |
+| created_at | timestamp     |                |
+
+---
+### Table `documents`
+| column           | type                                   | notes                |
+| ---------------- | -------------------------------------- | -------------------- |
+| id               | UUID (PK)                              | internal document id |
+| filename         | text                                   | “investor_nda.pdf”   |
+| storage_url      | text                                   | S3/GCS URI           |
+| uploaded_by      | UUID (FK → users.id)                   |                      |
+| created_at       | timestamp                              |                      |
+| compliance_score | float                                  | cached from report   |
+| status           | enum(`processing`,`complete`,`failed`) |                      |
+---
+### Table `clauses`
+| column      | type                     | notes                                  |
+| ----------- | ------------------------ | -------------------------------------- |
+| id          | UUID (PK)                | unique clause id                       |
+| document_id | UUID (FK → documents.id) |                                        |
+| page_number | int                      |                                        |
+| title       | text                     |                                        |
+| text        | text                     | full clause text                       |
+| embedding   | vector(384)              | (optional: for semantic deduplication) |
+| created_at  | timestamp                |                                        |
+> 💡 **Note**
+> 
+> You can use the `pgvector` extension to store embeddings efficiently if you want to do similarity lookups directly inside Postgres (without Chroma).
+
+ 
+---
+### Table `predictions`
+| column       | type                                   | notes              |
+| ------------ | -------------------------------------- | ------------------ |
+| id           | UUID (PK)                              |                    |
+| clause_id    | UUID (FK → clauses.id)                 |                    |
+| user_id      | UUID (FK → users.id)                   | reviewer           |
+| best_rule    | text                                   | LLM-predicted rule |
+| severity     | enum(`low`,`medium`,`high`,`critical`) |                    |
+| status       | enum(`OK`,`Needs Review`,`Red Flag`)   |                    |
+| reason       | text                                   |                    |
+| results_json | JSONB                                  | full GPT output    |
+| created_at   | timestamp                              |                    |
+---
+### Table `rejections`
+| column          | type                   | notes |
+| --------------- | ---------------------- | ----- |
+| id              | UUID (PK)              |       |
+| clause_id       | UUID (FK → clauses.id) |       |
+| reason_rejected | text                   |       |
+| user_id         | UUID (FK → users.id)   |       |
+| created_at      | timestamp              |       |
+
+---
+### Relationship summary
+```pgsql
+User ─┬─< Document ─┬─< Clause ─┬─< Prediction
+       │             │           └─< Rejection
+       │             └──────────────> GCS object (PDF)
+```
+
+* Every clause, evaluation, and decision is tracked with timestamps and user IDs
+* Can re-run analyses later without losing history
+* Before reanalyzing query:
+  ```sql
+  SELECT id FROM clauses WHERE md5(text) = md5($1);
+  ```
+  Thus, if a clause already exists with identical text -> skip reprocessing and retrieve prior results
+* Embedding each clause once and store both in:
+  * Chroma for model retrieval context
+  * pgvector (for fast internal lookups)
+
+---
 
 ## 🧩 Next Steps
 
