@@ -26,6 +26,7 @@ load_dotenv()
 class Clause:
     title: str
     body: str
+    pages: List[int]
 
     def __str__(self):
         return f"{self.title}\n{self.body}"
@@ -162,7 +163,7 @@ async def evaluate_clause(clause: Clause, coll: chromadb.api.models.Collection,
     }
 
 
-def extract_text_from_pdf(pdf_path: str) -> str:
+def extract_text_from_pdf(pdf_path: str) -> List[dict]:
     """
     Preprocess a PDF document to extract text.
     """
@@ -170,29 +171,72 @@ def extract_text_from_pdf(pdf_path: str) -> str:
     images = convert_from_path(pdf_path)
 
     # Extract text from each image using OCR
-    out = ""
+    pages = []
     for page_number, image in enumerate(images):
-        out += image_to_string(image)
-    return out
+        text = image_to_string(image)
+        pages.append({
+            "page_number": page_number + 1,
+            "text": text.strip()
+        })
+    return pages
 
 
-def segment_clauses(text: str) -> List[Clause]:
-    """Takes the text extracted from a PDF and segments it into clauses."""
-    # Discard spaces and multiple newlines
-    text = re.sub(r'\n+', '\n', text)
+def combine_pages_with_markers(pages: List[dict]) -> str:
+    combined = ""
+    for page in pages:
+        combined += f"[[PAGE_{page['page_number']}]]\n" + page["text"]
+    return combined
+
+
+def segment_clauses(pages: List[dict]) -> List[Clause]:
+    """Segments text into clauses while correctly tracking page ranges."""
+    combined = combine_pages_with_markers(pages)
 
     # Chunk by clauses titles
     # TODO: Optionally we could ask a LLM to PDF2MD and then use a simpler regex pattern to get titles
     # Note that this could be improved to ensure we capture clauses for different formats of NDA including sub-clauses
-    pattern = r'(?:\n|^)(\d{1,2}\.\s+[A-Z][^\n]+)(?=\n)'  # Matches titles like "1. Confidentiality" or "2.1 Non-Disclosure" followed by linebreak
-    sections = re.split(pattern, text)
+    pattern = r'(?:\n|^)(\d{1,2}\.\s+[A-Z][^\n]+)(?=\n)'
+    sections = re.split(pattern, combined)
 
-    # sections = [junk, title1, clause1, title2, clause2, ...]
     clauses = []
+    current_page_marker = 1
+
     for i in range(1, len(sections), 2):
-        title = sections[i].strip()
-        body = sections[i + 1].strip() if i + 1 < len(sections) else ""
-        clauses.append(Clause(title=title, body=body))
+        title_raw = sections[i].strip()
+        body_raw = sections[i + 1].strip() if i + 1 < len(sections) else ""
+
+        # Collect all page markers
+        page_markers = [int(p) for p in re.findall(r'\[\[PAGE_(\d+)\]\]', title_raw + body_raw)]
+
+        if page_markers:
+            first_marker = page_markers[0]
+            pages_for_clause = set(page_markers)
+
+            if title_raw.startswith(f'[[PAGE_{first_marker}]]'):
+                # Clause starts before the first marker (marker at title start)
+                if first_marker > 1:
+                    pages_for_clause.add(first_marker - 1)
+            else:
+                # Marker inside title or body → clause spans previous and current pages
+                if first_marker > 1:
+                    pages_for_clause.add(first_marker - 1)
+
+            current_page_marker = max(pages_for_clause)
+        else:
+            # No marker: clause stays on the same page
+            pages_for_clause = {current_page_marker}
+
+        # Clean markers
+        clean_title = re.sub(r'\[\[PAGE_\d+\]\]', '', title_raw).strip()
+        clean_body = re.sub(r'\[\[PAGE_\d+\]\]', '', body_raw).strip()
+
+        clauses.append(
+            Clause(
+                title=clean_title,
+                body=clean_body,
+                pages=sorted(pages_for_clause)
+            )
+        )
 
     return clauses
 
@@ -243,6 +287,7 @@ def compute_compliance_score(results: List[dict]) -> dict:
         }
     }
 
+
 # if __name__ == "__main__":
 # create_vectorstore("policyRules.json", persist_dir="./policy_vectorstore")
 #
@@ -252,3 +297,9 @@ def compute_compliance_score(results: List[dict]) -> dict:
 # clause = "Each Recipient shall indemnify the Discloser only in the event of willful misconduct."
 # result = evaluate_clause(clause, coll)
 # print(json.dumps(result, indent=2))
+
+if __name__ == "__main__":
+    pdfPath = r'../examples/investor_nda.pdf'
+    pages = extract_text_from_pdf(pdfPath)
+    clauses = segment_clauses(pages)
+    print(clauses)
