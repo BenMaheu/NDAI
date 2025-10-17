@@ -52,7 +52,7 @@ The system performs clause-level analysis, detects red flags, and outputs a stru
 
 ```
 .
-├── backend                        # backend
+├── backend/                       # backend
     ├── app.py                     # Flask backend
     ├── policy_matcher.py          # Core logic: LLM reasoning + vectorstore + PDF parsing
     ├── policyRules.json           # Full set of compliance policy rules
@@ -61,9 +61,12 @@ The system performs clause-level analysis, detects red flags, and outputs a stru
     ├── policy_vectorstore/        # Persistent Chroma vectorstore (auto-created)
     ├── uploads/                   # Uploaded PDF files
     └── reports/                   # JSON audit reports
-├── examples                       # example NDA PDFs for testing
+├── examples/                      # example NDA PDFs for testing
+    ├── investor_nda.pdf
+    ├── mutual_nda.pdf
+    └── supplier_nda.pdf 
 ├── .gitignore                     
-├── poetry.lock
+├── README.md                      # This file                    
 └── pyproject.toml                 # Requirements and project metadata
 
 ```
