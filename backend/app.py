@@ -2,6 +2,7 @@ import os
 from flask import Flask, request, jsonify
 from dotenv import load_dotenv
 import json
+import time
 
 from policy_matcher import analyze_nda, create_vectorstore, load_vectorstore
 
@@ -32,6 +33,7 @@ print("\nPolicy vectorstore ready !")
 # Flask routes
 @app.route("/analyze", methods=["POST"])
 def analyze():
+    t0 = time.time()
     if "file" not in request.files:
         return jsonify({"error": "No file provided."}), 400
 
@@ -48,6 +50,7 @@ def analyze():
         "filename": file.filename,
         "analysis": results,
         "total_clauses": len(results),
+        "time_seconds": round(time.time() - t0, 2)
     }
 
     # Save report for audit
