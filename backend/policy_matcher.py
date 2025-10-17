@@ -1,14 +1,15 @@
 import os
-from tqdm import tqdm
+import asyncio
 import json
 import chromadb
-from typing import List
+from typing import List, Any, Tuple
 from chromadb.utils import embedding_functions
-from openai import OpenAI
+from openai import AsyncOpenAI
 from dotenv import load_dotenv
 from pdf2image import convert_from_path
 from pytesseract import image_to_string
 import re
+from dataclasses import dataclass
 
 from config import RETRIEVED_POLICIES_COUNT, CLAUSE_STATUS, POLICY_SEVERITIES
 
@@ -20,6 +21,15 @@ load_dotenv()
 # or minidocks/poppler)
 
 # TODO : Create also a vectorstore for clauses and use it to find similar clauses in past NDAs
+
+@dataclass
+class Clause:
+    title: str
+    body: str
+
+    def __str__(self):
+        return f"{self.title}\n{self.body}"
+
 
 def create_vectorstore(rules_path: str = "policyRules.json", persist_dir: str = "./policy_vectorstore",
                        collection_name: str = "policy_rules", embedding_model: str = "all-MiniLM-L6-v2"):
@@ -82,8 +92,8 @@ def load_vectorstore(persist_directory: str, collection_name="policy_rules"):
     return coll
 
 
-def retrieve_policy_rules(clause_text: str, coll: chromadb.api.models.Collection, k: int = RETRIEVED_POLICIES_COUNT):
-    res = coll.query(query_texts=[clause_text], n_results=k)
+def retrieve_policy_rules(clause: Clause, coll: chromadb.api.models.Collection, k: int = RETRIEVED_POLICIES_COUNT):
+    res = coll.query(query_texts=[str(clause)], n_results=k)
     rules = []
     for i, doc in enumerate(res["documents"][0]):
         meta = res["metadatas"][0][i]
@@ -96,8 +106,8 @@ def retrieve_policy_rules(clause_text: str, coll: chromadb.api.models.Collection
     return rules
 
 
-def analyze_clause_llm(clause_text: str, rules: List[dict], model="gpt-4.1-mini"):
-    client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+async def analyze_clause_llm(clause: Clause, rules: List[dict], model="gpt-4.1-mini"):
+    client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
     policy_context = "\n\n".join(
         [f"- {r['title']} (severity: {r['severity']}): {r['content']}" for r in rules]
@@ -106,7 +116,7 @@ def analyze_clause_llm(clause_text: str, rules: List[dict], model="gpt-4.1-mini"
     You are an expert in contract law reviewing an NDA clause against internal compliance policies.
 
     Clause to evaluate:
-    \"\"\"{clause_text}\"\"\"
+    \"\"\"{str(clause)}\"\"\"
 
     Here are the most relevant internal policy rules:
     {policy_context}
@@ -124,28 +134,29 @@ def analyze_clause_llm(clause_text: str, rules: List[dict], model="gpt-4.1-mini"
       "reason": "string explanation"
     }}
     """
-    response = client.chat.completions.create(
-        model=model,
-        messages=[{"role": "user", "content": prompt}],
-        temperature=0.2
-    )
-
-    text = response.choices[0].message.content.strip()
-    text = text.replace("```json", "").replace("```", "").strip()
-
     try:
+        response = await client.chat.completions.create(
+            model=model,
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.2
+        )
+
+        text = response.choices[0].message.content.strip()
+        text = text.replace("```json", "").replace("```", "").strip()
+
         result = json.loads(text)
-    except json.JSONDecodeError:
-        result = {"best_rule": "Parsing Error", "status": "Needs Review", "reason": text}
+    except Exception as e:
+        result = {"best_rule": "Parsing Error", "status": "Needs Review", "reason": str(e)}
 
     return result
 
 
-def evaluate_clause(clause_text: str, coll: chromadb.api.models.Collection, k: int = RETRIEVED_POLICIES_COUNT):
-    retrieved_rules = retrieve_policy_rules(clause_text, coll, k=k)
-    llm_eval = analyze_clause_llm(clause_text, retrieved_rules)
+async def evaluate_clause(clause: Clause, coll: chromadb.api.models.Collection,
+                          k: int = RETRIEVED_POLICIES_COUNT) -> dict:
+    retrieved_rules = retrieve_policy_rules(clause, coll, k=k)
+    llm_eval = await analyze_clause_llm(clause, retrieved_rules)
     return {
-        "clause": clause_text[:400],
+        "clause": str(clause)[:400],
         "retrieved_rules": retrieved_rules,
         "llm_evaluation": llm_eval,
     }
@@ -165,7 +176,7 @@ def extract_text_from_pdf(pdf_path: str) -> str:
     return out
 
 
-def segment_clauses(text: str) -> List[dict]:
+def segment_clauses(text: str) -> List[Clause]:
     """Takes the text extracted from a PDF and segments it into clauses."""
     # Discard spaces and multiple newlines
     text = re.sub(r'\n+', '\n', text)
@@ -181,31 +192,31 @@ def segment_clauses(text: str) -> List[dict]:
     for i in range(1, len(sections), 2):
         title = sections[i].strip()
         body = sections[i + 1].strip() if i + 1 < len(sections) else ""
-        clauses.append({"title": title, "body": body})
+        clauses.append(Clause(title=title, body=body))
 
     return clauses
 
 
-def analyze_nda(pdf_path: str, coll: chromadb.api.models.Collection) -> List[dict]:
+async def analyze_nda_async(pdf_path: str, coll: chromadb.api.models.Collection) -> Tuple[Any]:
     text = extract_text_from_pdf(pdf_path)
     clauses = segment_clauses(text)
 
-    results = []
-    print("Analyzing clauses...")
-    for clause in tqdm(clauses):
-        clause_text = f"{clause['title']}\n{clause['body']}"
-        eval_result = evaluate_clause(clause_text, coll)
-        results.append(eval_result)
-
+    tasks = [evaluate_clause(clause, coll) for clause in clauses]
+    results = await asyncio.gather(*tasks)
     return results
 
 
+def analyze_nda(pdf_path: str, coll: chromadb.api.models.Collection) -> Tuple[Any]:
+    """Sync wrapper for Flask."""
+    print("Analyzing clauses...")
+    return asyncio.run(analyze_nda_async(pdf_path, coll))
+
 # if __name__ == "__main__":
-    # create_vectorstore("policyRules.json", persist_dir="./policy_vectorstore")
-    #
-    # coll = load_vectorstore("./policy_vectorstore")
-    #
-    # # Query vectorstore
-    # clause = "Each Recipient shall indemnify the Discloser only in the event of willful misconduct."
-    # result = evaluate_clause(clause, coll)
-    # print(json.dumps(result, indent=2))
+# create_vectorstore("policyRules.json", persist_dir="./policy_vectorstore")
+#
+# coll = load_vectorstore("./policy_vectorstore")
+#
+# # Query vectorstore
+# clause = "Each Recipient shall indemnify the Discloser only in the event of willful misconduct."
+# result = evaluate_clause(clause, coll)
+# print(json.dumps(result, indent=2))
