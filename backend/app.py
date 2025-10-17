@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 import json
 import time
 
-from policy_matcher import analyze_nda, create_vectorstore, load_vectorstore
+from policy_matcher import analyze_nda, create_vectorstore, load_vectorstore, compute_compliance_score
 
 load_dotenv()
 
@@ -44,12 +44,17 @@ def analyze():
     filepath = os.path.join(app.config["UPLOAD_FOLDER"], file.filename)
     file.save(filepath)
 
-    results = analyze_nda(filepath, coll)
+    try:
+        results = analyze_nda(filepath, coll)
+        score_summary = compute_compliance_score(results)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
     report = {
         "filename": file.filename,
         "analysis": results,
         "total_clauses": len(results),
+        "compliance": score_summary,
         "time_seconds": round(time.time() - t0, 2)
     }
 
@@ -113,4 +118,5 @@ if __name__ == "__main__":
     app.run(debug=True, port=5000)
 
     # Query example :
+    # In /examples folder run:
     # curl -X POST -F "file=@investor_nda.pdf" http://localhost:5000/analyze_nda
