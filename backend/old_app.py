@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 import json
 import time
 
-from policy_matcher import analyze_nda, create_vectorstore, load_vectorstore, compute_compliance_score
+from app.services.policy_matcher import analyze_nda, create_vectorstore, load_vectorstore, compute_compliance_score
 
 load_dotenv()
 
@@ -17,7 +17,7 @@ os.makedirs(app.config["REPORTS_FOLDER"], exist_ok=True)
 
 # Init vector store for policy rules
 # ---- INIT VECTORSTORE ONCE ----
-VECTORSTORE_DIR = "./policy_vectorstore"
+VECTORSTORE_DIR = "policy_vectorstore"
 RULES_PATH = "policyRules.json"
 
 # Check if vectorstore exists

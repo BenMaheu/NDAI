@@ -160,7 +160,7 @@ This gives a normalized compliance score between `0` (high risk) and `100` (full
 ### 1. Start the Flask server
 
 ```bash
-python app.py
+python old_app.py
 ```
 
 Expected logs:
