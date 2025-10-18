@@ -45,4 +45,4 @@ ENV FLASK_ENV=production
 EXPOSE 8080
 
 # Start the app
-CMD ["gunicorn", "--bind", ":8080", "api.main:create_app()"]
+CMD ["gunicorn", "--bind", ":8080", "app.main:create_app()"]

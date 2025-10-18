@@ -23,9 +23,6 @@ def init_vectorstore():
     print("Policy vectorstore ready!")
 
 
-init_vectorstore()
-
-
 @analyze_bp.route("", methods=["POST"])
 def analyze():
     t0 = time.time()

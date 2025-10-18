@@ -3,6 +3,7 @@ from flask import Flask
 import os
 from app.config import Config
 from app.services.storage import ensure_materials_available
+from app.routes.analyze import analyze_bp, init_vectorstore
 
 
 def create_app():
@@ -25,11 +26,12 @@ def create_app():
 
     # Register blueprints
     #  Importing here to load policy vectorstore after having downloaded GCS materials
-    from app.routes.analyze import analyze_bp
     app.register_blueprint(analyze_bp)
     # app.register_blueprint(reports_bp)
     # app.register_blueprint(chat_bp)
     # app.register_blueprint(health_bp)
+
+    init_vectorstore()
 
     return app
 
