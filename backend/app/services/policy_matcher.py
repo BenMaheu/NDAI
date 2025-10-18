@@ -5,15 +5,12 @@ import chromadb
 from typing import List, Any, Tuple
 from chromadb.utils import embedding_functions
 from openai import AsyncOpenAI
-from dotenv import load_dotenv
 from pdf2image import convert_from_path
 from pytesseract import image_to_string
 import re
 from dataclasses import dataclass
 
 from app.config import RETRIEVED_POLICIES_COUNT, CLAUSE_STATUS, POLICY_SEVERITIES
-
-load_dotenv()
 
 
 # WARNING : Needs to install poppler for pdf2image to work and torch for sentence_transformers
