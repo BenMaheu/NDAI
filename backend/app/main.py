@@ -4,6 +4,7 @@ import os
 from app.config import Config
 from app.services.storage import ensure_materials_available
 from app.routes.analyze import analyze_bp, init_vectorstore
+from app.services.db import db
 
 
 def create_app():
@@ -13,6 +14,8 @@ def create_app():
     # Create default folders
     os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
     os.makedirs(app.config["REPORT_FOLDER"], exist_ok=True)
+
+    db.init_app(app)
 
     # If running in Cloud Run (GCS bucket is defined)
     gcs_bucket = app.config.get("GCS_BUCKET")
@@ -36,6 +39,7 @@ def create_app():
     return app
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
+    # Only used locally, not in production
     app = create_app()
-    app.run(debug=True, port=5000)
+    app.run(debug=True, port=int(os.getenv("PORT", 8080)))
