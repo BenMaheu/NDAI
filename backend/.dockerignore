@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.log
+.env
+.idea/
+.DS_Store
+uploads/
+reports/
+policy_vectorstore/
+tests/
+app/credentials.json

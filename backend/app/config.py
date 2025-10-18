@@ -12,7 +12,7 @@ class Config:
     VECTORSTORE_DIR = os.getenv("VECTORSTORE_DIR", "backend/policy_vectorstore")
 
     OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-    GCS_BUCKET = os.getenv("GCS_BUCKET")
+    GCS_BUCKET = os.getenv("GCS_BUCKET", None)
     GOOGLE_APPLICATION_CREDENTIALS = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
 
 
