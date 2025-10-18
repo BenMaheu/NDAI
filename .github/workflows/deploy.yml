@@ -12,6 +12,9 @@ jobs:
       contents: 'read'
       id-token: 'write'
 
+    env:
+      IMAGE: gcr.io/${{ secrets.GCP_PROJECT_ID }}/nda-analyzer
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -28,14 +31,18 @@ jobs:
           install_components: 'beta'
 
       - name: Build and push image to Artifact Registry
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
           cd backend
-          gcloud builds submit --tag gcr.io/${{ secrets.GCP_PROJECT_ID }}/nda-analyzer
+          gcloud builds submit \
+          --config cloudbuild.yaml \
+          --substitutions=_HF_TOKEN=${HF_TOKEN},_IMAGE=${IMAGE}
 
       - name: Deploy to Cloud Run
         run: |
           gcloud run deploy nda-analyzer \
-            --image gcr.io/${{ secrets.GCP_PROJECT_ID }}/nda-analyzer \
+            --image ${IMAGE} \
             --region us-central1 \
             --service-account=${{ secrets.GCP_SERVICE_ACCOUNT_EMAIL }} \
             --allow-unauthenticated \
