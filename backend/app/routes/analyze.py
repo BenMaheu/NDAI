@@ -75,4 +75,6 @@ def analyze():
         "report_url": report_url or report_path
     }
 
+    # TODO: delete the local files after upload if needed
+
     return jsonify(report), 200

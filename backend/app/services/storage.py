@@ -4,7 +4,12 @@ from google.cloud import storage
 
 def get_gcs_client():
     creds_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
-    return storage.Client.from_service_account_json(creds_path)
+    if creds_path:
+        # Local behavior
+        return storage.Client.from_service_account_json(creds_path)
+    else:
+        # On Cloud Run
+        return storage.Client()
 
 
 def ensure_materials_available(bucket_name: str, local_rules_path: str, local_vector_dir: str):
