@@ -28,8 +28,23 @@ RUN poetry install --no-interaction --no-ansi
 RUN pip install torch --extra-index-url https://download.pytorch.org/whl/cpu
 RUN pip install sentence-transformers==5.1.1
 
+# Huggingface authetication
+ARG HF_TOKEN
+ENV HUGGINGFACE_HUB_TOKEN=$HF_TOKEN
+# Disable HF telemetry and online downloads (TRANSFORMERS_OFFLINE=0 allow download during build)
+ENV TRANSFORMERS_OFFLINE=0
+ENV HF_HUB_DISABLE_TELEMETRY=1
+
+# Preload SentenceTransformer model
+RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('all-MiniLM-L6-v2')"
+
 # Copy application code
 COPY . .
+
+# Make cache accessible to appuser
+RUN mkdir -p /root/.cache /home/appuser/.cache \
+ && chmod -R 777 /root/.cache /home/appuser/.cache
+ENV TRANSFORMERS_CACHE=/root/.cache/huggingface
 
 # Create non-root user --> Avoids priviledge escalation vulnerabilities
 RUN adduser --disabled-password --gecos '' appuser && chown -R appuser /app
@@ -40,14 +55,6 @@ ENV PYTHONPATH=/app
 ENV PYTHONUNBUFFERED=1
 ENV PORT=8080
 ENV FLASK_ENV=production
-# Disable HF telemetry and online downloads
-ARG HF_TOKEN
-ENV HUGGINGFACE_HUB_TOKEN=$HF_TOKEN
-ENV TRANSFORMERS_OFFLINE=1
-ENV HF_HUB_DISABLE_TELEMETRY=1
-
-# Preload SentenceTransformer model
-RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('all-MiniLM-L6-v2')"
 
 # Expose port for Cloud Run
 EXPOSE 8080
