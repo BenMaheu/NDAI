@@ -1,7 +1,6 @@
 # Run using 'PYTHONPATH=backend python -m app.main' in NDAI project root
 from flask import Flask
 import os
-from app.routes.analyze import analyze_bp
 from app.config import Config
 from app.services.storage import ensure_materials_available
 
@@ -25,6 +24,8 @@ def create_app():
         )
 
     # Register blueprints
+    #  Importing here to load policy vectorstore after having downloaded GCS materials
+    from app.routes.analyze import analyze_bp
     app.register_blueprint(analyze_bp)
     # app.register_blueprint(reports_bp)
     # app.register_blueprint(chat_bp)
