@@ -5,11 +5,11 @@ load_dotenv()
 
 
 class Config:
-    UPLOAD_FOLDER = os.getenv("UPLOAD_FOLDER", "backend/uploads")
-    REPORT_FOLDER = os.getenv("REPORT_FOLDER", "backend/reports")
+    UPLOAD_FOLDER = os.getenv("UPLOAD_FOLDER", "/tmp/uploads")
+    REPORT_FOLDER = os.getenv("REPORT_FOLDER", "/tmp/reports")
 
-    POLICY_RULES_PATH = os.getenv("POLICY_RULES_PATH", "backend/policyRules.json")
-    VECTORSTORE_DIR = os.getenv("VECTORSTORE_DIR", "backend/policy_vectorstore")
+    POLICY_RULES_PATH = os.getenv("POLICY_RULES_PATH", "/tmp/policyRules.json")
+    VECTORSTORE_DIR = os.getenv("VECTORSTORE_DIR", "/tmp/policy_vectorstore")
 
     OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
     GCS_BUCKET = os.getenv("GCS_BUCKET", None)
