@@ -1,7 +1,6 @@
 import os
 import json
 import time
-import threading
 from flask import Blueprint, request, jsonify, current_app
 from app.services.policy_matcher import analyze_nda, create_vectorstore, load_vectorstore
 from app.services.scoring import compute_compliance_score
@@ -22,26 +21,6 @@ def init_vectorstore():
     print("Loading policy vectorstore...")
     coll = load_vectorstore(Config.VECTORSTORE_DIR)
     print("Policy vectorstore ready!")
-
-
-def async_upload_and_cleanup(gcs_bucket, local_pdf, local_report, file_basename):
-    """Background task to upload files to GCS and clean them up locally."""
-    try:
-        pdf_url = upload_to_gcs(gcs_bucket, local_pdf, f"pdfs/{file_basename}")
-        report_url = upload_to_gcs(gcs_bucket, local_report, f"reports/{file_basename}_report.json")
-        print(f"Uploaded to GCS: {pdf_url}, {report_url}")
-    except Exception as e:
-        print(f"GCS upload failed for {file_basename}: {e}")
-        pdf_url, report_url = None, None
-    finally:
-        # Cleanup
-        for path in [local_pdf, local_report]:
-            try:
-                if os.path.exists(path):
-                    os.remove(path)
-                    print(f"Deleted temp file: {path}")
-            except Exception as cleanup_err:
-                print(f"Failed to delete {path}: {cleanup_err}")
 
 
 @analyze_bp.route("", methods=["POST"])
@@ -82,12 +61,20 @@ def analyze():
 
     # Upload to GCS (optionally)
     gcs_bucket = current_app.config.get("GCS_BUCKET")
+    pdf_url, report_url = None, None
 
     if gcs_bucket:
-        threading.Thread(
-            target=async_upload_and_cleanup,
-            args=(gcs_bucket, filepath, report_path, file.filename),
-            daemon=True
-        ).start()
+        try:
+            pdf_url = upload_to_gcs(gcs_bucket, filepath, f"pdfs/{file.filename}")
+            report_url = upload_to_gcs(gcs_bucket, report_path, f"reports/{file.filename}_report.json")
+        except Exception as e:
+            print(f"⚠️ GCS upload failed: {e}")
+
+    report["storage"] = {
+        "pdf_url": pdf_url or filepath,
+        "report_url": report_url or report_path
+    }
+
+    # TODO: delete the local files after upload if needed
 
     return jsonify(report), 200
