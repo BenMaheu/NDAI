@@ -49,6 +49,6 @@ jobs:
             --memory=2Gi \
             --cpu 2 \
             --execution-environment=gen2 \
-            --cpu-throttling=off \
+            --cpu-throttling off \
             --allow-unauthenticated \
             --set-env-vars OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }},GCS_BUCKET=${{ secrets.GCS_BUCKET }}
