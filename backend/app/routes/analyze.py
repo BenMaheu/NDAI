@@ -1,7 +1,6 @@
 import os
 import json
 import time
-import threading
 from flask import Blueprint, request, jsonify, current_app
 from app.services.scoring import compute_compliance_score
 from app.services.storage import upload_to_gcs
