@@ -3,7 +3,7 @@ from flask import Flask
 import os
 from app.config import Config
 from app.services.storage import ensure_materials_available
-from app.routes.analyze import analyze_bp, init_vectorstore
+from app.routes.analyze import analyze_bp
 
 
 def create_app():
