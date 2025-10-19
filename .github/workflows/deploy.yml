@@ -57,7 +57,7 @@ jobs:
       - name: Warmup deployed service (health check)
         run: |
             sleep 30
-            SERVICE_URL=$(gcloud run services describe $SERVICE_NAME --region europe-west10 --format 'value(status.url)')
+            SERVICE_URL=$(gcloud run services describe nda-analyzer --region europe-west10 --format 'value(status.url)')
             echo "Service URL: $SERVICE_URL"
           
             echo "Calling health endpoint..."
