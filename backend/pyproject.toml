@@ -21,6 +21,7 @@ google-cloud-storage = "^3.4.1"
 #torch = { version = "2.2.2", source="torch"}
 #sentence_transformers = "^5.1.1"
 gunicorn = "^23.0.0"
+psycopg2-binary = "^2.9.11"
 
 [build-system]
 requires = ["poetry-core"]

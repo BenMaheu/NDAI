@@ -4,12 +4,19 @@ import os
 from app.config import Config
 from app.services.storage import ensure_materials_available
 from app.routes.analyze import analyze_bp
+from app.db import init_db
 
 
 def create_app():
     print("Starting NDAI backend application...")
     app = Flask(__name__)
     app.config.from_object(Config)
+
+    # Initialize database
+    try:
+        init_db()
+    except Exception as e:
+        print(f"Error initializing database: {e}")
 
     # Create default folders
     os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
@@ -26,13 +33,10 @@ def create_app():
         )
 
     # Register blueprints
-    #  Importing here to load policy vectorstore after having downloaded GCS materials
     app.register_blueprint(analyze_bp)
     # app.register_blueprint(reports_bp)
     # app.register_blueprint(chat_bp)
     # app.register_blueprint(health_bp)
-
-    # init_vectorstore()
 
     return app
 
