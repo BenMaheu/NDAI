@@ -7,6 +7,7 @@ from app.routes.analyze import analyze_bp
 
 
 def create_app():
+    print("Starting NDAI backend application...")
     app = Flask(__name__)
     app.config.from_object(Config)
 

@@ -48,4 +48,5 @@ jobs:
             --min-instances 1 \
             --memory=2Gi \
             --allow-unauthenticated \
-            --set-env-vars OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }},GCS_BUCKET=${{ secrets.GCS_BUCKET }}
+            --set-env-vars=OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }} \
+            --set-env-vars=GCS_BUCKET=${{ secrets.GCS_BUCKET }}
