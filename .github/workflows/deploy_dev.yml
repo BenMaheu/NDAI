@@ -1,7 +1,7 @@
-name: Deploy to Cloud Run
+name: Deploy to Cloud Run Dev
 
 on:
-  push:
+  pull_request:
     branches: [ main ]
 
 jobs:
@@ -41,7 +41,7 @@ jobs:
 
       - name: Deploy to Cloud Run
         run: |
-          gcloud run deploy nda-analyzer \
+          gcloud run deploy nda-analyze-dev \
             --image ${IMAGE} \
             --region europe-west10 \
             --service-account=${{ secrets.GCP_SERVICE_ACCOUNT_EMAIL }} \
@@ -56,11 +56,11 @@ jobs:
 
       - name: Warmup deployed service (health check)
         run: |
-            sleep 30
-            SERVICE_URL=$(gcloud run services describe nda-analyzer --region europe-west10 --format 'value(status.url)')
-            echo "Service URL: $SERVICE_URL"
-          
-            echo "Calling health endpoint..."
-            curl -s -o /dev/null -w "%{http_code}" "$SERVICE_URL/health" | grep 200 && \
-            echo "✅ Health check succeeded" || \
-            (echo "❌ Health check failed" && exit 1)
+          sleep 30
+          SERVICE_URL=$(gcloud run services describe nda-analyzer --region europe-west10 --format 'value(status.url)')
+          echo "Service URL: $SERVICE_URL"
+
+          echo "Calling health endpoint..."
+          curl -s -o /dev/null -w "%{http_code}" "$SERVICE_URL/health" | grep 200 && \
+          echo "✅ Health check succeeded" || \
+          (echo "❌ Health check failed" && exit 1)

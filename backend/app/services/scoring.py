@@ -1,6 +1,5 @@
 from typing import List
-from app.config import POLICY_SEVERITIES, SEVERITY_WEIGHTS, STATUS_PENALTIES
-
+from app.config import POLICY_SEVERITIES, SEVERITY_WEIGHTS, STATUS_PENALTIES, COMPLIANT_SCORE_THRESHOLD, AMBIGUOUS_SCORE_THRESHOLD
 
 def compute_compliance_score(results: List[dict]) -> dict:
     total_penalty = 0
@@ -23,8 +22,16 @@ def compute_compliance_score(results: List[dict]) -> dict:
     else:
         score = max(0.0, 100.0 * (1 - total_penalty / max_possible_penalty))
 
+    if score > COMPLIANT_SCORE_THRESHOLD:
+        status = "safe"
+    elif score > AMBIGUOUS_SCORE_THRESHOLD:
+        status = "to_review"
+    else:
+        status = "not_safe"
+
     return {
         "compliance_score": round(score, 2),
+        "status": status,
         "details": {
             "total_penalty": total_penalty,
             "max_possible_penalty": max_possible_penalty,

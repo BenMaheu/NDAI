@@ -154,7 +154,7 @@ async def evaluate_clause(clause: Clause, coll: chromadb.api.models.Collection,
     retrieved_rules = retrieve_policy_rules(clause, coll, k=k)
     llm_eval = await analyze_clause_llm(clause, retrieved_rules)
     return {
-        "clause": str(clause)[:400],
+        "clause": {"title": clause.title, "body": clause.body, "pages": clause.pages},
         "retrieved_rules": retrieved_rules,
         "llm_evaluation": llm_eval,
     }
