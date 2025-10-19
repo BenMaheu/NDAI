@@ -31,7 +31,7 @@ def create_app():
     # app.register_blueprint(chat_bp)
     # app.register_blueprint(health_bp)
 
-    init_vectorstore()
+    # init_vectorstore()
 
     return app
 

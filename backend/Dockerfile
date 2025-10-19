@@ -64,4 +64,5 @@ ENV TRANSFORMERS_OFFLINE=1
 EXPOSE 8080
 
 # Start the app
+RUN python -c "print('Flask app created — ready to serve requests on :8080')"
 CMD ["gunicorn", "--bind", ":8080", "app.main:create_app()"]

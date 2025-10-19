@@ -1,6 +1,7 @@
 import os
 import json
 import time
+import threading
 from flask import Blueprint, request, jsonify, current_app
 from app.services.policy_matcher import analyze_nda, create_vectorstore, load_vectorstore
 from app.services.scoring import compute_compliance_score
@@ -14,7 +15,19 @@ coll = None
 vectorstore_initialized = False
 
 
-def init_vectorstore():
+def async_upload_and_cleanup(bucket, local_pdf, local_report, file_basename):
+    try:
+        pdf_url = upload_to_gcs(bucket, local_pdf, f"pdfs/{file_basename}")
+        report_url = upload_to_gcs(bucket, local_report, f"reports/{file_basename}_report.json")
+        print(f"✅ Uploaded {file_basename} to GCS")
+    finally:
+        for path in [local_pdf, local_report]:
+            if os.path.exists(path):
+                os.remove(path)
+                print(f"🧹 Deleted temp: {path}")
+
+
+def ensure_vectorstore_loaded():
     global coll, vectorstore_initialized
     if not vectorstore_initialized:
         print("No vectorstore initialized.")
@@ -28,6 +41,7 @@ def init_vectorstore():
 
 @analyze_bp.route("", methods=["POST"])
 def analyze():
+    ensure_vectorstore_loaded()
     t0 = time.time()
     if "file" not in request.files:
         return jsonify({"error": "No file provided."}), 400
