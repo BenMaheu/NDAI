@@ -108,7 +108,7 @@ def analyze():
 
 
 def store_doc_analysis_in_db(report: dict):
-    from app.db import SessionLocal, Document, Clause, Prediction, SeverityLevel, ClauseStatus
+    from app.db import SessionLocal, Document, Clause, Prediction
 
     db = SessionLocal()
 
