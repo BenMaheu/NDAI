@@ -23,6 +23,8 @@ class DocumentStatus(enum.Enum):
     to_review = "to_review"
     safe = "safe"
     not_safe = "not_safe"
+    accepted = "accepted"
+    declined = "declined"
 
 
 # Models
