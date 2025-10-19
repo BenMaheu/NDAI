@@ -41,7 +41,7 @@ def get_document(doc_id: int):
                 {
                     "id": r.id,
                     "comment": r.comment,
-                    "new_status": r.new_status.value if r.new_status else None,
+                    "new_status": r.new_status,
                     "created_at": r.created_at.isoformat(),
                 }
                 for r in clause.rejections
@@ -54,8 +54,8 @@ def get_document(doc_id: int):
                 "pages": clause.pages,
                 "prediction": {
                     "best_rule": prediction.best_rule if prediction else None,
-                    "severity": prediction.severity.value if prediction and prediction.severity else None,
-                    "status": prediction.status.value if prediction and prediction.status else None,
+                    "severity": prediction.severity if prediction and prediction.severity else None,
+                    "status": prediction.status if prediction and prediction.status else None,
                     "reason": prediction.reason if prediction else None,
                     "retrieved_rules": prediction.retrieved_rules if prediction else [],
                     "llm_evaluation": prediction.llm_evaluation if prediction else None,
