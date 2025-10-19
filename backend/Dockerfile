@@ -64,4 +64,4 @@ ENV TRANSFORMERS_OFFLINE=1
 EXPOSE 8080
 
 # Start the app
-CMD ["gunicorn", "--bind", ":8080", "app.main:create_app()"]
+CMD ["gunicorn", "--workers", "4", "--threads", "2", "--bind", ":8080", "app.main:create_app()"]

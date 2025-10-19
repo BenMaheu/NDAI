@@ -46,7 +46,8 @@ jobs:
             --region europe-west10 \
             --service-account=${{ secrets.GCP_SERVICE_ACCOUNT_EMAIL }} \
             --min-instances 1 \
-            --memory=4Gi \
+            --memory=2Gi \
+            --cpu=4 \
             --allow-unauthenticated \
             --set-env-vars=OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }} \
             --set-env-vars=GCS_BUCKET=${{ secrets.GCS_BUCKET }}
