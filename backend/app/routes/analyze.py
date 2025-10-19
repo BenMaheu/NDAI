@@ -143,7 +143,8 @@ def store_doc_analysis_in_db(report: dict):
                 severity=clause_data["llm_evaluation"].get("severity", "low"),
                 status=clause_data["llm_evaluation"].get("status", "red_flag"),
                 reason=clause_data["llm_evaluation"].get("reason", ""),
-                retrieved_rules=clause_data.get("retrieved_rules", [])
+                retrieved_rules=clause_data.get("retrieved_rules", []),
+                llm_evaluation=clause_data.get("llm_evaluation", {}),
             )
             db.add(prediction)
             db.commit()
