@@ -3,7 +3,7 @@ from flask import Flask
 import os
 from app.config import Config
 from app.services.storage import ensure_materials_available
-from app.routes.analyze import analyze_bp, init_vectorstore
+from app.routes.analyze import analyze_bp
 
 
 def create_app():
@@ -32,11 +32,11 @@ def create_app():
     # app.register_blueprint(chat_bp)
     # app.register_blueprint(health_bp)
 
-    init_vectorstore()
+    # init_vectorstore()
 
     return app
 
 
 if __name__ == '__main__':
     app = create_app()
-    app.run(debug=True, port=5000)
+    app.run(debug=True, port=8080)
