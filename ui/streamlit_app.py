@@ -171,7 +171,6 @@ with tabs[0]:
     col1, col2 = st.columns(2)
     with col1:
         if st.button("✅ Accept Document", use_container_width=True):
-            st.success("Document marked as *Accepted* (endpoint coming soon)")
             res = requests.post(f"{API_BASE}/feedback/documents/{doc['id']}/accept")
             st.success("NDA marked as *Accepted*")
     with col2:
@@ -240,9 +239,12 @@ with tabs[1]:
         st.divider()
         st.markdown("### Feedback Actions")
 
+        comment = st.text_area(
+            "Reason for rejection (optional):",
+            key=f"rej_{clause['id']}",
+            placeholder="e.g., The clause unfairly limits liability or lacks clear termination rights."
+        )
         if st.button("🚫 Reject Clause", key=f"reject_{clause['id']}"):
-            st.warning("Clause flagged for review (endpoint coming soon)")
-            comment = st.text_area("Reason for rejection (optional):", key=f"rej_{clause['id']}")
             res = requests.post(
                 f"{API_BASE}/feedback/clauses/{clause['id']}/reject",
                 json={"comment": comment, "new_status": "rejected"}
