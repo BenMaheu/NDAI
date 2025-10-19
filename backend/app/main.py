@@ -4,6 +4,7 @@ import os
 from app.config import Config
 from app.services.storage import ensure_materials_available
 from app.routes.analyze import analyze_bp
+from app.routes.health import health_bp
 from app.db import init_db
 
 
@@ -34,9 +35,9 @@ def create_app():
 
     # Register blueprints
     app.register_blueprint(analyze_bp)
+    app.register_blueprint(health_bp)
     # app.register_blueprint(reports_bp)
     # app.register_blueprint(chat_bp)
-    # app.register_blueprint(health_bp)
 
     return app
 

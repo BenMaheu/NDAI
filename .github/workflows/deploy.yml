@@ -51,3 +51,14 @@ jobs:
             --allow-unauthenticated \
             --set-env-vars=OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }} \
             --set-env-vars=GCS_BUCKET=${{ secrets.GCS_BUCKET }}
+
+      - name: Warmup deployed service (health check)
+        run: |
+            sleep 30
+            SERVICE_URL=$(gcloud run services describe $SERVICE_NAME --region $REGION --format 'value(status.url)')
+            echo "Service URL: $SERVICE_URL"
+          
+            echo "Calling health endpoint..."
+            curl -s -o /dev/null -w "%{http_code}" "$SERVICE_URL/health" | grep 200 && \
+            echo "✅ Health check succeeded" || \
+            (echo "❌ Health check failed" && exit 1)
