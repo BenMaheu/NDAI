@@ -11,16 +11,19 @@ analyze_bp = Blueprint("analyze", __name__, url_prefix="/analyze")
 
 # Initialize vectorstore once
 coll = None
+vectorstore_initialized = False
 
 
 def init_vectorstore():
-    global coll
-    if not os.path.exists(Config.VECTORSTORE_DIR) or not os.listdir(Config.VECTORSTORE_DIR):
-        print("Creating policy vectorstore...")
-        create_vectorstore(Config.POLICY_RULES_PATH, persist_dir=Config.VECTORSTORE_DIR)
-    print("Loading policy vectorstore...")
-    coll = load_vectorstore(Config.VECTORSTORE_DIR)
-    print("Policy vectorstore ready!")
+    global coll, vectorstore_initialized
+    if not vectorstore_initialized:
+        print("No vectorstore initialized.")
+        if not os.path.exists(Config.VECTORSTORE_DIR) or not os.listdir(Config.VECTORSTORE_DIR):
+            print("No policy vectorstore found. Creating policy vectorstore...")
+            create_vectorstore(Config.POLICY_RULES_PATH, persist_dir=Config.VECTORSTORE_DIR)
+        print("Loading policy vectorstore...")
+        coll = load_vectorstore(Config.VECTORSTORE_DIR)
+        print("Policy vectorstore ready!")
 
 
 @analyze_bp.route("", methods=["POST"])
