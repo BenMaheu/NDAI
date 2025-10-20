@@ -7,6 +7,7 @@ from app.routes.analyze import analyze_bp
 from app.routes.health import health_bp
 from app.routes.documents import docs_bp
 from app.routes.feedback import feedback_bp
+from app.routes.chat import chat_bp
 from app.db import init_db
 
 
@@ -40,7 +41,7 @@ def create_app():
     app.register_blueprint(health_bp)
     app.register_blueprint(docs_bp)
     app.register_blueprint(feedback_bp)
-    # app.register_blueprint(chat_bp)
+    app.register_blueprint(chat_bp)
 
     return app
 

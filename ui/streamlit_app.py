@@ -88,7 +88,11 @@ def call_chat(question, clause):
     body = {"question": question}
     if clause:
         body["clause"] = clause.get("body", "")
-        body["pages"] = clause.get("pages", [])
+        pred = clause.get("prediction")
+        status = pred.get("status") or "NEEDS REVIEW"
+        body["status"] = status
+        reason = pred.get("reason")
+        body["reason"] = reason
     try:
         res = requests.post(f"{API_BASE}/chat", json=body, timeout=120)
         if res.ok:
@@ -180,7 +184,7 @@ with tabs[0]:
 
 # --------------------------- Tab 1: Analysis ---------------------
 with tabs[1]:
-    st.header("📊 Document Analysis")
+    st.header("📊 Clause Document Analysis")
 
     data = st.session_state.get("analysis")
     if not data or "clauses" not in data:

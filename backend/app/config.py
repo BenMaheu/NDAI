@@ -10,6 +10,7 @@ class Config:
 
     POLICY_RULES_PATH = os.getenv("POLICY_RULES_PATH", "/tmp/policyRules.json")
     VECTORSTORE_DIR = os.getenv("VECTORSTORE_DIR", "/tmp/policy_vectorstore")
+    REJECTIONS_VECTORSTORE_DIR = os.getenv("REJECTIONS_VECTORSTORE_DIR", "/tmp/rejections_vectorstore")
 
     OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
     GCS_BUCKET = os.getenv("GCS_BUCKET", None)

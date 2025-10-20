@@ -11,6 +11,7 @@ import re
 from dataclasses import dataclass
 
 from app.config import RETRIEVED_POLICIES_COUNT, CLAUSE_STATUS, POLICY_SEVERITIES
+from app.services.rejections_vectorstore import search_similar_rejections
 
 
 # WARNING : Needs to install poppler for pdf2image to work and torch for sentence_transformers
@@ -90,8 +91,9 @@ def load_vectorstore(persist_directory: str, collection_name="policy_rules"):
     return coll
 
 
-def retrieve_policy_rules(clause: Clause, coll: chromadb.api.models.Collection, k: int = RETRIEVED_POLICIES_COUNT):
-    res = coll.query(query_texts=[str(clause)], n_results=k)
+def retrieve_policy_rules(clause: Clause, policy_coll: chromadb.api.models.Collection,
+                          k: int = RETRIEVED_POLICIES_COUNT):
+    res = policy_coll.query(query_texts=[str(clause)], n_results=k)
     rules = []
     for i, doc in enumerate(res["documents"][0]):
         meta = res["metadatas"][0][i]
@@ -104,12 +106,18 @@ def retrieve_policy_rules(clause: Clause, coll: chromadb.api.models.Collection, 
     return rules
 
 
-async def analyze_clause_llm(clause: Clause, rules: List[dict], model="gpt-4.1-mini"):
+async def analyze_clause_llm(clause: Clause, rules: List[dict], rejected_clauses: List[dict], model="gpt-4.1-mini"):
     client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
     policy_context = "\n\n".join(
         [f"- {r['title']} (severity: {r['severity']}): {r['content']}" for r in rules]
     )
+
+    rejected_clauses = [f"Previously rejected clause:\n{doc}\nReason: {meta.get('comment', '')}" for doc, meta in
+                        zip(rejected_clauses['documents'][0],
+                            rejected_clauses['metadatas'][0])] if rejected_clauses.get('documents') else []
+    rejected_context = "\n---\n".join(rejected_clauses)
+
     prompt = f"""
     You are an expert in contract law reviewing an NDA clause against internal compliance policies.
 
@@ -118,6 +126,9 @@ async def analyze_clause_llm(clause: Clause, rules: List[dict], model="gpt-4.1-m
 
     Here are the most relevant internal policy rules:
     {policy_context}
+    
+    Be aware of previously rejected clauses:
+    {rejected_context if rejected_context else 'None'}
 
     Task:
     - Determine which rule applies most directly.
@@ -149,10 +160,12 @@ async def analyze_clause_llm(clause: Clause, rules: List[dict], model="gpt-4.1-m
     return result
 
 
-async def evaluate_clause(clause: Clause, coll: chromadb.api.models.Collection,
+async def evaluate_clause(clause: Clause, policy_coll: chromadb.api.models.Collection,
+                          rejections_coll: chromadb.api.models.Collection,
                           k: int = RETRIEVED_POLICIES_COUNT) -> dict:
-    retrieved_rules = retrieve_policy_rules(clause, coll, k=k)
-    llm_eval = await analyze_clause_llm(clause, retrieved_rules)
+    retrieved_rules = retrieve_policy_rules(clause, policy_coll, k=k)
+    rejected_clauses = search_similar_rejections(rejections_coll, str(clause), n_results=3)
+    llm_eval = await analyze_clause_llm(clause, retrieved_rules, rejected_clauses)
     return {
         "clause": {"title": clause.title, "body": clause.body, "pages": clause.pages},
         "retrieved_rules": retrieved_rules,
@@ -238,31 +251,22 @@ def segment_clauses(pages: List[dict]) -> List[Clause]:
     return clauses
 
 
-async def analyze_nda_async(pdf_path: str, coll: chromadb.api.models.Collection) -> Tuple[Any]:
+async def analyze_nda_async(pdf_path: str, policy_coll: chromadb.api.models.Collection,
+                            rejections_coll: chromadb.api.models.Collection) -> Tuple[Any]:
     text = extract_text_from_pdf(pdf_path)
     clauses = segment_clauses(text)
 
-    tasks = [evaluate_clause(clause, coll) for clause in clauses]
+    tasks = [evaluate_clause(clause, policy_coll, rejections_coll) for clause in clauses]
     results = await asyncio.gather(*tasks)
     return results
 
 
-def analyze_nda(pdf_path: str, coll: chromadb.api.models.Collection) -> Tuple[Any]:
+def analyze_nda(pdf_path: str, policy_coll: chromadb.api.models.Collection,
+                rejections_coll: chromadb.api.models.Collection) -> Tuple[Any]:
     """Sync wrapper for Flask."""
     print("Analyzing clauses...")
-    return asyncio.run(analyze_nda_async(pdf_path, coll))
+    return asyncio.run(analyze_nda_async(pdf_path, policy_coll, rejections_coll))
 
-
-
-# if __name__ == "__main__":
-# create_vectorstore("policyRules.json", persist_dir="./policy_vectorstore")
-#
-# coll = load_vectorstore("./policy_vectorstore")
-#
-# # Query vectorstore
-# clause = "Each Recipient shall indemnify the Discloser only in the event of willful misconduct."
-# result = evaluate_clause(clause, coll)
-# print(json.dumps(result, indent=2))
 
 if __name__ == "__main__":
     pdfPath = r'../examples/investor_nda.pdf'
