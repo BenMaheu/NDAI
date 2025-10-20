@@ -1,16 +1,18 @@
-import os
 import json
+import os
 import time
 import requests
 import pandas as pd
 import streamlit as st
 import plotly.graph_objects as go
-from urllib.parse import urlparse
+from dotenv import load_dotenv
 
+load_dotenv()
 st.set_page_config(page_title="NDA Analyzer", layout="wide")
 
 # ---------------------------- Config ----------------------------
-API_BASE = "https://nda-analyzer-961479672047.europe-west10.run.app"
+API_BASE = os.getenv("API_BASE")
+
 
 with st.sidebar:
     st.header("⚙️ Settings")

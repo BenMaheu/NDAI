@@ -105,7 +105,7 @@ subgraph Deploy["🚀 Deployment Phase (GitHub Actions → Cloud Run)"]
   A1[👷 GitHub Actions] -->|Builds Docker Image| A2[gcloud builds submit]
   A2 -->|Pushes to Artifact Registry| A3[📦 Container Image]
   A3 -->|Deploys| A4[☁️ Cloud Run Service]
-  A4 -->|Warmup| A5[/health Endpoint]
+  A4 -->|Warmup| A5["/health" Endpoint]
 end
 
 %% === RUNTIME INFRASTRUCTURE ===
@@ -120,7 +120,7 @@ subgraph AnalyzeFlow["📄 /analyze Request Flow"]
   U1[👤 User Uploads PDF via Streamlit or API] -->|POST /analyze| B1[Flask API]
   B1 -->|Check| B2{Vectorstore Loaded?}
   B2 -->|No| B3[Create & Load Policy Vectorstore]
-  B2 -->|Yes| B4[Analyze NDA (LLM + OCR + Rule Matching)]
+  B2 -->|Yes| B4[Analyze NDA LLM + OCR + Rule Matching]
   B4 --> B5[Compute Compliance Score]
   B5 --> B6[Store Results in PostgreSQL:<br/>documents, clauses, predictions]
   B6 --> B7[Upload PDF + Report to GCS]
