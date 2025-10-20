@@ -648,12 +648,16 @@ The Streamlit app can be deployed either:
 
 ## 🔮 Future Directions
 
-- ❌**Fix**: if red flag alert on critical severity policies are present
-- 🧠 Incorporate rejected clause embeddings directly in the policy matcher
+- ❌**FIX**❌: if red flag alert on critical severity policies are present
+- ❌**FIX**❌: Refactor in OOP style where for the first time /analyze is called we instantiate a PolicyMatcher object
+  that loads all. That way multiple /analyze should only load once vectorstores for policy and rejections.
+- 🧠 Incorporate rejected clause embeddings directly in the policy matcher.
 - 📂Add PDF Viewer to Streamlit for in-app document reading
 - 🫙Add PDF/report.json link to GCS storage
 - 🧪Add unit tests
-- 🧬Add ontology graph knowledge for ontology driven RAG (e.g. If a clause mentions "GDPR", link to data privacy rules and
+  necessary resources and can be reused for subsequent calls. These materials will be updated periodically.
+- 🧬Add ontology graph knowledge for ontology driven RAG (e.g. If a clause mentions "GDPR", link to data privacy rules
+  and
   check that should be retrieved in the policy matcher)
 - 📈Add evaluation metrics tracking (LLM accuracy over time) --> model drift etc...
 - 🧾 Generate full compliance reports (PDF summaries)
