@@ -6,6 +6,7 @@ import pandas as pd
 import streamlit as st
 import plotly.graph_objects as go
 from dotenv import load_dotenv
+import base64
 
 load_dotenv()
 st.set_page_config(page_title="NDA Analyzer", layout="wide")
@@ -14,16 +15,6 @@ st.set_page_config(page_title="NDA Analyzer", layout="wide")
 API_BASE = os.getenv("API_BASE")
 
 
-with st.sidebar:
-    st.header("⚙️ Settings")
-    api_base_input = st.text_input("API Base URL", API_BASE)
-    if api_base_input and api_base_input != API_BASE:
-        API_BASE = api_base_input.rstrip("/")
-    st.caption("Your deployed Cloud Run API base (e.g., https://nda-analyze-dev-xxxxxx.run.app)")
-    if st.button("🔄 Reset Session"):
-        for k in list(st.session_state.keys()):
-            del st.session_state[k]
-        st.experimental_rerun()
 
 # Initialize session state
 st.session_state.setdefault("analysis", None)
@@ -171,6 +162,40 @@ with tabs[0]:
                     st.markdown(f"**Status:** {doc['status']}")
                 with c2:
                     compliance_gauge(doc.get("compliance_score", 0))
+
+                # PDF preview and links
+                data = st.session_state.get("analysis")
+                if data:
+                    pdf_url = data.get("pdf_url") or data.get("storage", {}).get("pdf_url")
+                    report_url = data.get("report_url") or data.get("storage", {}).get("report_url")
+
+                    c1, c2 = st.columns([3, 2], gap="large")
+
+                    with c1:
+                        st.subheader("📄 Source PDF")
+                        if pdf_url:
+                            st.markdown(f"[🔗 Open PDF ↗]({pdf_url})")
+                        else:
+                            st.caption("No PDF URL available.")
+
+                    with c2:
+                        st.subheader("🧾 Report JSON")
+                        if report_url:
+                            st.markdown(f"[🔗 Open Report ↗]({report_url})")
+                        else:
+                            st.caption("No report URL available.")
+
+                    # PDF Preview
+                    st.subheader("📕 PDF Preview")
+                    resp = requests.get(pdf_url)
+                    if resp.ok:
+                        b64 = base64.b64encode(resp.content).decode("utf-8")
+                        st.markdown(
+                            f'<iframe src="data:application/pdf;base64,{b64}" width="100%" height="900", width="200"></iframe>',
+                            unsafe_allow_html=True
+                        )
+                    else:
+                        st.warning("PDF unavailable or access restricted.")
 
     st.markdown("### Review Decision")
 
