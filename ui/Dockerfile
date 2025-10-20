@@ -3,7 +3,7 @@ FROM python:3.11-slim
 WORKDIR /app
 
 # Copy poetry files first (for caching)
-COPY pyproject.toml poetry.lock ./
+COPY pyproject.toml ./
 RUN pip install poetry && poetry install --no-interaction --no-ansi
 
 # Create non-root user --> Avoids priviledge escalation vulnerabilities
