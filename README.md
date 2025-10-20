@@ -22,6 +22,9 @@ legal teams to validate, reject, and comment on individual clauses through a use
 ```bash
 .
 ├── README.md
+├── .github/workflows
+│   ├── deploy.yml # Deploy to production environment
+│   └── deploy_dev.yml # Deploy to dev environment
 ├── backend
 │   ├── Dockerfile
 │   ├── app
@@ -43,26 +46,15 @@ legal teams to validate, reject, and comment on individual clauses through a use
 │   │       ├── scoring.py
 │   │       └── storage.py
 │   ├── cloudbuild.yaml
-│   ├── pyproject.toml
-├── cmd
-│   ├── cloud-sql-proxy
-│   ├── deploy_cloud_run
-│   ├── gcloud_roles_grant
-│   ├── run_local_backend_docker
-│   ├── run_local_flask_server
-│   ├── run_local_ui_docker
-│   ├── run_streamlit_app
-│   └── test_cloud_run
+│   └── pyproject.toml
 ├── examples
 │   ├── investor_nda.pdf
 │   ├── mutual_nda.pdf
 │   └── supplier_nda.pdf
 └── ui
     ├── Dockerfile
-    ├── poetry.lock
     ├── pyproject.toml
-    ├── streamlit_app.py
-    └── streamlit_old_app.py
+    └── streamlit_app.py
 
 ```
 ---
