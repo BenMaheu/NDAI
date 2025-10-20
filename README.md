@@ -190,42 +190,247 @@ Both are persisted locally via ChromaDB and synced to GCS to survive Cloud Run r
 
 ---
 
+## 🌐 API Endpoints
+
+The NDA Analyzer backend exposes a RESTful API built with **Flask**.  
+Each route is organized by logical domain: analysis, documents, chat, and feedback.
+
+All responses are in **JSON**, and all endpoints follow REST conventions.  
+Authentication is not yet implemented (planned for v2).
+
+---
+
+### 🔍 `/analyze` — Analyze NDA Document
+
+**Method:** `POST`  
+**Content-Type:** `multipart/form-data`
+
+**Description:**  
+Uploads an NDA (PDF) for clause segmentation, policy matching, LLM evaluation, and compliance scoring.
+
+**Example Request:**
+```bash
+curl -X POST -F "file=@nda.pdf" https://<API_BASE>/analyze
+```
+
+**Response**:
+```bash
+{
+  "filename": "nda.pdf",
+  "analysis": [...],
+  "total_clauses": 18,
+  "compliance": {
+    "compliance_score": 87.5,
+    "details": {"ok": 14, "review": 3, "red_flag": 1},
+    "status": "to_review"
+  },
+  "storage": {
+    "pdf_url": "https://storage.googleapis.com/.../pdfs/nda.pdf",
+    "report_url": "https://storage.googleapis.com/.../reports/nda_report.json"
+  }
+}
+```
+
+**Side Effects**:
+* Stores analysis results in PostgreSQL (documents, clauses, predictions)
+* Loads files to GCS (pdfs/ and reports/ buckets)
+* Initializes and loads the policy vectorstore from GCS if missing
+
+---
+
+### 📚 `/documents` — List and Retrieve Documents
+
+`GET /documents`
+
+**Description**:
+Lists all analyzed documents from PostgreSQL, ordered by upload date.
+
+**Response**:
+```bash
+[
+  {
+    "id": 1,
+    "filename": "nda_client_a.pdf",
+    "uploaded_at": "2025-10-19T21:00:00Z",
+    "compliance_score": 92.1,
+    "status": "safe",
+    "report_url": "https://storage.googleapis.com/.../nda_client_a_report.json"
+  }
+]
+```
+
+---
+
+`GET /documents/<int:doc_id>`
+
+**Description**:
+Returns a detailed view of a document, including clauses, predictions, and rejections.
+
+**Response**:
+
+```bash
+{
+  "id": 1,
+  "filename": "nda_client_a.pdf",
+  "uploaded_at": "2025-10-19T21:00:00Z",
+  "total_clauses": 18,
+  "compliance_score": 92.1,
+  "status": "safe",
+  "clauses": [
+    {
+      "id": 101,
+      "title": "Confidentiality Term",
+      "body": "This NDA covers all proprietary information disclosed...",
+      "pages": [2, 3],
+      "prediction": {
+        "status": "OK",
+        "severity": "low",
+        "reason": "Clause includes perpetual confidentiality.",
+        "best_rule": "Confidentiality Coverage",
+        "retrieved_rules": [...]
+      },
+      "rejections": [
+        {"id": 12, "comment": "Missing survival clause", "new_status": "rejected"}
+      ]
+    }
+  ]
+}
+```
+
+---
+
+### 💬 `/chat` — Clause-aware Assistant
+
+**Method:** `POST`  
+**Content-Type:** `application/json`
+
+**Description**:
+Allows the user to query the LLM interactively about a specific clause and reasoning.
+
+**Request**:
+```bash
+{
+  "question": "Why is this clause risky?",
+  "clause": "This agreement is governed by the laws of Delaware...",
+  "reason": "The jurisdiction clause may create litigation risk."
+}
+```
+
+**Response**:
+```bash
+{
+  "answer": "This clause was flagged due to limited jurisdiction flexibility.
+Similar clauses were previously rejected by counsel.
+Consider changing to a neutral jurisdiction or arbitration clause."
+}
+```
+
+**Backend Logic**:
+* Builds contextual prompt with clause text, llm evaluation reasons, and user question.
+* Opionally includes retrieved rejected clauses from the rejections vectorstore.
+* Calls OpenAI GPT-4o-mini for explanation or suggestion.
+
+---
+
+### 📝 `/feedback` — Legal Feedback & Continuous Learning
+
+Handles user feedback and approval flows.
+
+---
+
+`POST /feedback/documents/<int:doc_id>/accept`
+
+**Description:** Marks a document as accepted after human review.
+
+**Response**:
+```bash
+{"message": "Document nda_client_a.pdf marked as accepted"}
+```
+
+---
+
+`POST /feedback/documents/<int:doc_id>/decline`
+
+**Description:** Marks a document as declined after legal review.
+
+**Response:**
+```bash
+{"message": "Document nda_client_a.pdf marked as declined"}
+```
+
+---
+
+`POST /feedback/clauses/<int:clause_id>/reject`
+
+**Description:** Stores manual feedback for a rejected clause and updates the rejections vectorstore.
+
+**Request**:
+```bash
+{
+  "comment": "Clause too vague on data retention",
+  "new_status": "rejected"
+}
+```
+
+**Response:**
+```bash
+{
+  "message": "Clause 45 rejected",
+  "rejection_id": 102,
+  "timestamp": "2025-10-19T22:03:12Z"
+}
+```
+
+**Backend Logic:**
+* Saves the feedback in PostgreSQL (rejections table)
+* Adds clause embedding and comment to rejections_vectorstore
+* Syncs updated Chroma index to GCS for persistence
+
+---
+
+### 🩺 `/health` — Service Health Check
+
+**Method:** `GET`  
+**Content-Type:** `application/json`
+
+**Description:**  
+Simple health check endpoint used for Cloud Run warmup and deployment validation.  
+It ensures the **policy vectorstore** is initialized and ready before serving analysis requests.
+
+**Response Example:**
+```json
+{
+  "status": "ok",
+  "vectorstore_loaded": true
+}
+```
+
+**Usage Example (in CI/CD):**
+```bash
+
+curl -s https://<API_BASE>/health
+```
+
+**Behavior:**
+* Calls ensure_vectorstore_loaded() internally to verify embeddings are available.
+* Returns HTTP 200 if service and vectorstore are operational.
 
 
 ---
 
-### 💬 Chat Endpoint Logic
+### ⚙️ Summary Table
 
-When `/chat` is called:
-1.	Retrieve clause text, reasoning, and user question.
-2.	Query rejections_vectorstore for similar rejected clauses.
-3.	Build a structured prompt:
-```
-Clause:
-[clause text]
+| Category      | 	Method | 	Endpoint                                                                             | 	Description                                           |
+|---------------|---------|---------------------------------------------------------------------------------------|--------------------------------------------------------|
+| 📄 Documents	 | GET	    | `/documents`	                                                                           | List all analyzed NDAs                                 |
+| 📄 Documents	 | GET	    | `/documents/<id>`                                                                       | 	Retrieve one document with all clauses                |
+| ⚙️ Analysis	  | POST	   | `/analyze`                                                                              | 	Upload and analyze new NDA PDF                        |
+| 💬 Chat	      | POST	   | `/chat	`                                                                                | Ask questions about a clause                           |
+| ✅ Feedback	   | POST	   | `/feedback/documents/<id>/accept`                                                       | 	Mark NDA as accepted                                  |
+| ❌ Feedback    | 	POST	  | `/feedback/documents/<id>/decline`| 	Mark NDA as declined                                  |
+| 🚫 Feedback	  | POST    | 	`/feedback/clauses/<id>/reject`	| Reject a specific clause and log it in the vectorstore |
+| 🩺 Health	    | GET     | 	`/health`	| Health Check                                           |
 
-Original Reasoning:
-[reason]
-
-User question:
-[question]
-
-Similar Rejected Clauses:
-[text + comments]
-```
-
-4.	Call the LLM (e.g. gpt-4o-mini) with temperature 0.4.
-5.	Return an explanation like:
-
-```
-{
-  "answer": "This clause is risky because it allows unilateral disclosure...",
-  "retrieved_rejections": [...]
-}
-```
-
-
-⸻
 ## 🖥️ Streamlit Interface
 
 The **Streamlit dashboard** provides a complete visual and interactive layer on top of the Flask API and database.  
@@ -319,14 +524,14 @@ Planned features:
 
 ## 🧩 Feedback Loop Summary
 
-| Step | Component | Description |
-|------|------------|-------------|
-| 1️⃣ | Clause rejected in UI | User provides comment (manual correction) |
-| 2️⃣ | `/feedback` API | Records rejection in database |
-| 3️⃣ | Vectorstore update | Clause text embedded into `rejections_vectorstore` |
-| 4️⃣ | Cloud sync | Local Chroma index synced to GCS |
-| 5️⃣ | LLM prompt | Similar rejected clauses retrieved in next analysis |
-| ✅ | Continuous learning | The system improves at spotting unwanted clauses |
+| Step | Component                              | Description |
+|------|----------------------------------------|-------------|
+| 1️⃣ | Clause rejected in UI                  | User provides comment (manual correction) |
+| 2️⃣ | `/feedback/<int:clause_id>/reject` API | Records rejection in database |
+| 3️⃣ | Vectorstore update                     | Clause text embedded into `rejections_vectorstore` |
+| 4️⃣ | Cloud sync                             | Local Chroma index synced to GCS |
+| 5️⃣ | LLM prompt                             | Similar rejected clauses retrieved in next analysis |
+| ✅ | Continuous learning                    | The system improves at spotting unwanted clauses |
 
 ---
 
