@@ -67,6 +67,7 @@ def analyze():
     try:
         results = analyze_nda(filepath, coll)
         score_summary = compute_compliance_score(results)
+        print("Analysis completed.")
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
