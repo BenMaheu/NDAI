@@ -93,6 +93,69 @@ legal teams to validate, reject, and comment on individual clauses through a use
    Streamlit Dashboard  ◀───►  /documents  ◀───►  /chat  ◀───►  /feedback
 ```
 
+---
+
+## 🧩 System Architecture & Request Flow
+
+```mermaid
+flowchart TD
+
+%% === DEPLOYMENT PHASE ===
+subgraph Deploy["🚀 Deployment Phase (GitHub Actions → Cloud Run)"]
+  A1[👷 GitHub Actions] -->|Builds Docker Image| A2[gcloud builds submit]
+  A2 -->|Pushes to Artifact Registry| A3[📦 Container Image]
+  A3 -->|Deploys| A4[☁️ Cloud Run Service]
+  A4 -->|Warmup| A5[/health Endpoint]
+end
+
+%% === RUNTIME INFRASTRUCTURE ===
+subgraph Infra["🧱 Runtime Infrastructure"]
+  A4 -->|Connects| DB[(Cloud SQL PostgreSQL)]
+  A4 -->|Reads/Writes| GCS[(Google Cloud Storage)]
+  A4 -->|Loads| VS[(Chroma Vectorstore)]
+end
+
+%% === ANALYSIS FLOW ===
+subgraph AnalyzeFlow["📄 /analyze Request Flow"]
+  U1[👤 User Uploads PDF via Streamlit or API] -->|POST /analyze| B1[Flask API]
+  B1 -->|Check| B2{Vectorstore Loaded?}
+  B2 -->|No| B3[Create & Load Policy Vectorstore]
+  B2 -->|Yes| B4[Analyze NDA (LLM + OCR + Rule Matching)]
+  B4 --> B5[Compute Compliance Score]
+  B5 --> B6[Store Results in PostgreSQL:<br/>documents, clauses, predictions]
+  B6 --> B7[Upload PDF + Report to GCS]
+  B7 --> B8[Return JSON Report to User]
+end
+
+%% === INTERACTION FLOW ===
+subgraph Interact["💬 Feedback & Chat"]
+  U2[👩‍⚖️ Legal Counsel] -->|GET /documents| C1[List Analyzed NDAs]
+  U2 -->|GET /documents/<id>| C2[View Clause-by-Clause Analysis]
+  U2 -->|POST /feedback/clauses/<id>/reject| C3[Reject Clause]
+  C3 -->|Add Embedding| VS
+  U2 -->|POST /chat| C4[Ask LLM About Clause Reasoning]
+end
+
+%% === RELATIONSHIPS ===
+A4 --> B1
+B1 --> DB
+B1 --> GCS
+C1 --> DB
+C2 --> DB
+C3 --> DB
+
+%% STYLE SECTION
+classDef infra fill:#f3f4f6,stroke:#999,stroke-width:1px;
+classDef api fill:#e0f7fa,stroke:#26a69a,stroke-width:1px;
+classDef data fill:#fce4ec,stroke:#f06292,stroke-width:1px;
+classDef user fill:#fff3e0,stroke:#fb8c00,stroke-width:1px;
+
+class A1,A2,A3,A4,A5 infra;
+class DB,GCS,VS data;
+class B1,B2,B3,B4,B5,B6,B7,B8 api;
+class U1,U2,C1,C2,C3,C4 user;
+```
+
 ⸻
 
 ## 🧩 Database Schema
@@ -587,8 +650,9 @@ The Streamlit app can be deployed either:
 
 - ❌**Fix**: if red flag alert on critical severity policies are present
 - 🧠 Incorporate rejected clause embeddings directly in the policy matcher
-- Add PDF Viewer to Streamlit for in-app document reading
-- Add PDF/report.json link to GCS storage
+- 📂Add PDF Viewer to Streamlit for in-app document reading
+- 🫙Add PDF/report.json link to GCS storage
+- 🧪Add unit tests
 - 🧬Add ontology graph knowledge for ontology driven RAG (e.g. If a clause mentions "GDPR", link to data privacy rules and
   check that should be retrieved in the policy matcher)
 - 📈Add evaluation metrics tracking (LLM accuracy over time) --> model drift etc...
