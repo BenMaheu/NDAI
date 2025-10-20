@@ -1,0 +1,65 @@
+name: Deploy Streamlit UI to Cloud Run
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'ui/**'
+      - '.github/workflows/deploy_ui.yml'
+
+jobs:
+  deploy-ui:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+
+    env:
+      SERVICE_NAME: nda-ui
+      REGION: europe-west10
+      IMAGE: gcr.io/${{ secrets.GCP_PROJECT_ID }}/nda-ui
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up gcloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+
+      - name: Build and push Docker image
+        working-directory: ui
+        run: |
+          gcloud builds submit \
+            --tag ${IMAGE} \
+            .
+
+      - name: Deploy Streamlit UI to Cloud Run
+        run: |
+          gcloud run deploy $SERVICE_NAME \
+            --image ${IMAGE} \
+            --region $REGION \
+            --platform managed \
+            --allow-unauthenticated \
+            --min-instances=1 \
+            --cpu=2 \
+            --memory=1Gi \
+            --service-account=${{ secrets.GCP_SERVICE_ACCOUNT_EMAIL }} \
+            --set-env-vars=API_BASE=${{ secrets.API_BASE_URL }}
+
+      - name: Health check (optional)
+        run: |
+          sleep 20
+          SERVICE_URL=$(gcloud run services describe $SERVICE_NAME --region $REGION --format 'value(status.url)')
+          echo "Service URL: $SERVICE_URL"
+          curl -s -o /dev/null -w "%{http_code}" "$SERVICE_URL" | grep 200 && \
+          echo "✅ UI deployed successfully" || \
+          (echo "❌ UI health check failed" && exit 1)
