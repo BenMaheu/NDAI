@@ -11,6 +11,7 @@ import re
 from dataclasses import dataclass
 
 from app.config import RETRIEVED_POLICIES_COUNT, CLAUSE_STATUS, POLICY_SEVERITIES
+from app.services.rejections_vectorstore import search_similar_rejections
 
 
 # WARNING : Needs to install poppler for pdf2image to work and torch for sentence_transformers
@@ -110,6 +111,12 @@ async def analyze_clause_llm(clause: Clause, rules: List[dict], model="gpt-4.1-m
     policy_context = "\n\n".join(
         [f"- {r['title']} (severity: {r['severity']}): {r['content']}" for r in rules]
     )
+
+    rejected = search_similar_rejections(str(clause), n_results=3)
+    rejected_clauses = [f"Previously rejected clause:\n{doc}\nReason: {meta.get('comment', '')}" for doc, meta in
+                        zip(rejected['documents'][0], rejected['metadatas'][0])] if rejected.get('documents') else []
+    rejected_context = "\n---\n".join(rejected_clauses)
+
     prompt = f"""
     You are an expert in contract law reviewing an NDA clause against internal compliance policies.
 
@@ -118,6 +125,9 @@ async def analyze_clause_llm(clause: Clause, rules: List[dict], model="gpt-4.1-m
 
     Here are the most relevant internal policy rules:
     {policy_context}
+    
+    Be aware of previously rejected clauses:
+    {rejected_context if rejected_context else 'None'}
 
     Task:
     - Determine which rule applies most directly.
@@ -251,7 +261,6 @@ def analyze_nda(pdf_path: str, coll: chromadb.api.models.Collection) -> Tuple[An
     """Sync wrapper for Flask."""
     print("Analyzing clauses...")
     return asyncio.run(analyze_nda_async(pdf_path, coll))
-
 
 
 # if __name__ == "__main__":

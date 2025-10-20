@@ -1,5 +1,6 @@
 from flask import Blueprint, jsonify, request
 from app.db import SessionLocal, Document, Clause, Rejection, DocumentStatus
+from app.services.rejections_vectorstore import add_rejection_to_vectorstore
 from datetime import datetime
 
 feedback_bp = Blueprint("feedback", __name__, url_prefix="/feedback")
@@ -59,10 +60,16 @@ def reject_clause(clause_id):
         db.add(rejection)
         db.commit()
 
+        # Add to persistent vectorstore
+        add_rejection_to_vectorstore(rejection.id, clause.id, clause.body, comment, clause.document_id)
+
         return jsonify({
             "message": f"Clause {clause_id} rejected",
             "rejection_id": rejection.id,
             "timestamp": rejection.created_at.isoformat(),
         }), 200
+    except Exception as e:
+        db.rollback()
+        return jsonify({"error": str(e)}), 500
     finally:
         db.close()
