@@ -4,12 +4,14 @@ import time
 from flask import Blueprint, request, jsonify, current_app
 from app.services.scoring import compute_compliance_score
 from app.services.storage import upload_to_gcs
+from app.services.rejections_vectorstore import load_rejections_vectorstore
 from app.config import Config
 
 analyze_bp = Blueprint("analyze", __name__, url_prefix="/analyze")
 
 # Initialize vectorstore once
-coll = None
+policy_coll = None
+rejections_coll = None
 vectorstore_initialized = False
 
 
@@ -26,7 +28,7 @@ def async_upload_and_cleanup(bucket, local_pdf, local_report, file_basename):
 
 
 def ensure_vectorstore_loaded():
-    global coll, vectorstore_initialized
+    global policy_coll, vectorstore_initialized
     if not vectorstore_initialized:
         from app.services.policy_matcher import create_vectorstore, load_vectorstore
         print("No vectorstore initialized.")
@@ -34,9 +36,19 @@ def ensure_vectorstore_loaded():
             print("No policy vectorstore found. Creating policy vectorstore...")
             create_vectorstore(Config.POLICY_RULES_PATH, persist_dir=Config.VECTORSTORE_DIR)
         print("Loading policy vectorstore...")
-        coll = load_vectorstore(Config.VECTORSTORE_DIR)
+        policy_coll = load_vectorstore(Config.VECTORSTORE_DIR)
         vectorstore_initialized = True
         print("Policy vectorstore ready!")
+
+
+def ensure_rejections_vectorstore_loaded():
+    """Load the rejections vectorstore once and reuse."""
+    global rejections_coll
+    if rejections_coll is None:
+        print("Loading persistent rejections vectorstore...")
+        rejections_coll = load_rejections_vectorstore()
+        rejections_loaded = True
+        print("Rejections vectorstore ready!")
 
 
 @analyze_bp.route("", methods=["POST"])
@@ -44,6 +56,7 @@ def analyze():
     # Ensure vectorstore is loaded --> We import here to avoid loading embedding model during the app startup
     from app.services.policy_matcher import analyze_nda
     ensure_vectorstore_loaded()
+    ensure_rejections_vectorstore_loaded()
 
     t0 = time.time()
     if "file" not in request.files:
@@ -65,7 +78,7 @@ def analyze():
     file.save(filepath)
 
     try:
-        results = analyze_nda(filepath, coll)
+        results = analyze_nda(filepath, policy_coll, rejections_coll)
         score_summary = compute_compliance_score(results)
         print("Analysis completed.")
     except Exception as e:
@@ -155,4 +168,3 @@ def store_doc_analysis_in_db(report: dict):
         print(f"Error storing analysis in DB: {e}")
     finally:
         db.close()
-

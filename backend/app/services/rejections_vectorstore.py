@@ -1,5 +1,6 @@
 import os
 from chromadb import PersistentClient
+import chromadb.api.models.Collection as Collection
 from chromadb.utils import embedding_functions
 from app.config import Config
 from app.services.storage import download_from_gcs, upload_to_gcs, get_gcs_client
@@ -63,7 +64,8 @@ def persist_rejections_vectorstore():
             print(f"Could not upload vectorstore to GCS: {e}")
 
 
-def add_rejection_to_vectorstore(rejection_id: int, clause_id: int, clause_text: str, comment: str, doc_id: int | None = None):
+def add_rejection_to_vectorstore(rejection_id: int, clause_id: int, clause_text: str, comment: str,
+                                 doc_id: int | None = None):
     """Store a rejected clause embedding for future retrieval."""
     coll = load_rejections_vectorstore()
     metadata = {
@@ -80,7 +82,6 @@ def add_rejection_to_vectorstore(rejection_id: int, clause_id: int, clause_text:
     print(f"Added rejected clause {clause_id} to vectorstore.")
 
 
-def search_similar_rejections(query: str, n_results: int = 3):
+def search_similar_rejections(coll: Collection, query: str, n_results: int = 3):
     """Retrieve most similar rejected clauses for context injection."""
-    coll = load_rejections_vectorstore()
     return coll.query(query_texts=[query], n_results=n_results)
