@@ -180,7 +180,7 @@ with tabs[0]:
 
 # --------------------------- Tab 1: Analysis ---------------------
 with tabs[1]:
-    st.header("📊 Document Analysis")
+    st.header("📊 Clause Document Analysis")
 
     data = st.session_state.get("analysis")
     if not data or "clauses" not in data:
