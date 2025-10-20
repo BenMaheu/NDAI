@@ -119,7 +119,7 @@ def analyze_pdf(uploaded_file) -> dict:
 
 
 # --------------------------- UI Tabs ----------------------------
-tabs = st.tabs(["📂 Documents", "📊 Analysis", "💬 Chat", "⚙️ Admin"])
+tabs = st.tabs(["📂 NDAs", "📊 Analysis", "💬 NDA Chat", "⚙️ Admin"])
 
 # --------------------------- Tab 0: Documents --------------------
 with tabs[0]:
@@ -275,15 +275,16 @@ with tabs[1]:
             key=f"rej_{clause['id']}",
             placeholder="e.g., The clause unfairly limits liability or lacks clear termination rights."
         )
-        if st.button("🚫 Reject Clause", key=f"reject_{clause['id']}"):
-            res = requests.post(
-                f"{API_BASE}/feedback/clauses/{clause['id']}/reject",
-                json={"comment": comment, "new_status": "rejected"}
-            )
-            if res.ok:
-                st.success("Clause rejection recorded.")
-            else:
-                st.error(f"Error: {res.text}")
+        with st.spinner("Submitting feedback..."):
+            if st.button("🚫 Reject Clause", key=f"reject_{clause['id']}"):
+                res = requests.post(
+                    f"{API_BASE}/feedback/clauses/{clause['id']}/reject",
+                    json={"comment": comment, "new_status": "rejected"}
+                )
+                if res.ok:
+                    st.success("Clause rejection recorded.")
+                else:
+                    st.error(f"Error: {res.text}")
 
         # Chat clause
         st.markdown("---")
@@ -318,7 +319,7 @@ with tabs[1]:
 
 # --------------------------- Tab 2: Chat -------------------------
 with tabs[2]:
-    st.header("💬 Clause Assistant")
+    st.header("💬 Document Assistant")
     clause = st.session_state.get("selected_clause")
     if not clause:
         st.info("Select a clause from the Analysis tab to start chatting.")
