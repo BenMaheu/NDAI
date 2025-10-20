@@ -18,6 +18,53 @@ legal teams to validate, reject, and comment on individual clauses through a use
 - **Persistent data** in a PostgreSQL database.
 - **Continuous improvement loop** through rejected clause embeddings.
 
+### Project architecture
+```bash
+.
+├── README.md
+├── backend
+│   ├── Dockerfile
+│   ├── app
+│   │   ├── __init__.py
+│   │   ├── config.py
+│   │   ├── credentials.json # Google Cloud credentials
+│   │   ├── db.py
+│   │   ├── main.py
+│   │   ├── routes
+│   │   │    ├── analyze.py
+│   │   │    ├── chat.py
+│   │   │    ├── documents.py
+│   │   │    ├── feedback.py
+│   │   │    └── health.py
+│   │   └── services
+│   │       ├── llm.py
+│   │       ├── policy_matcher.py
+│   │       ├── rejections_vectorstore.py
+│   │       ├── scoring.py
+│   │       └── storage.py
+│   ├── cloudbuild.yaml
+│   ├── pyproject.toml
+├── cmd
+│   ├── cloud-sql-proxy
+│   ├── deploy_cloud_run
+│   ├── gcloud_roles_grant
+│   ├── run_local_backend_docker
+│   ├── run_local_flask_server
+│   ├── run_local_ui_docker
+│   ├── run_streamlit_app
+│   └── test_cloud_run
+├── examples
+│   ├── investor_nda.pdf
+│   ├── mutual_nda.pdf
+│   └── supplier_nda.pdf
+└── ui
+    ├── Dockerfile
+    ├── poetry.lock
+    ├── pyproject.toml
+    ├── streamlit_app.py
+    └── streamlit_old_app.py
+
+```
 ---
 
 ## 🧱 Technology Stack
@@ -249,7 +296,6 @@ Used to populate the **rejections vectorstore**, improving future analyses.
 - Optimized for **compliance auditing**, **explainability**, and **continuous learning** from feedback.
 
 ---
-⸻
 
 ## 🧩 Vectorstores
 
@@ -651,7 +697,7 @@ The Streamlit app can be deployed either:
 - ❌**FIX**❌: if red flag alert on critical severity policies are present
 - ❌**FIX**❌: Refactor in OOP style where for the first time /analyze is called we instantiate a PolicyMatcher object
   that loads all. That way multiple /analyze should only load once vectorstores for policy and rejections.
-- 🧠 Incorporate rejected clause embeddings directly in the policy matcher.
+- ❌**FIX**❌: Remove compliance details from `documents` table as it can be retrieved from predictions
 - 📂Add PDF Viewer to Streamlit for in-app document reading
 - 🫙Add PDF/report.json link to GCS storage
 - 🧪Add unit tests
