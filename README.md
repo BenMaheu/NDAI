@@ -68,7 +68,7 @@ legal teams to validate, reject, and comment on individual clauses through a use
 | **Backend**        | ⚙️ **Flask**                   | REST API serving endpoints `/analyze`, `/documents`, `/chat`, `/feedback` |
 | **Database**       | 🐘 **PostgreSQL (Cloud SQL)**  | Stores documents, clauses, predictions, and rejections                    |
 | **Vectorstore**    | 🧩 **ChromaDB**                | Stores embeddings of rules and rejected clauses for similarity search     |
-| **LLM**            | 🧠 **OpenAI GPT-4o / Mistral** | Analyzes clause meaning and provides compliance reasoning                 |
+| **LLM**            | 🧠 **OpenAI GPT-4o-mini**      | Analyzes clause meaning and provides compliance reasoning                 |
 | **Storage**        | ☁️ **Google Cloud Storage**    | Stores uploaded PDFs, JSON reports, and ChromaDB snapshots                |
 | **Infrastructure** | 🚀 **Cloud Run + Cloud Build** | Serverless deployment of the Flask backend via CI/CD                      |
 | **CI/CD**          | 🤖 **GitHub Actions**          | Automated build and deployment pipeline                                   |
@@ -185,10 +185,10 @@ C2 --> DB
 C3 --> DB
 
 %% STYLE SECTION
-classDef infra fill:#f3f4f6,stroke:#999,stroke-width:1px;
-classDef api fill:#e0f7fa,stroke:#26a69a,stroke-width:1px;
-classDef data fill:#fce4ec,stroke:#f06292,stroke-width:1px;
-classDef user fill:#fff3e0,stroke:#fb8c00,stroke-width:1px;
+classDef infra fill:#f3f4f6,stroke:#999,stroke-width:1px,color:#000;
+classDef api fill:#e0f7fa,stroke:#26a69a,stroke-width:1px,color:#000;
+classDef data fill:#fce4ec,stroke:#f06292,stroke-width:1px,color:#000;
+classDef user fill:#fff3e0,stroke:#fb8c00,stroke-width:1px,color:#000;
 
 class A1,A2,A3,A4,A5 infra;
 class DB,GCS,VS data;
@@ -292,10 +292,10 @@ Used to populate the **rejections vectorstore**, improving future analyses.
 
 ## 🧩 Vectorstores
 
-| **Collection**            | **Description**                                                       | **Location** |
-|---------------------------|-----------------------------------------------------------------------|--------------|
-| `policy_vectorstore`      | 	Embeddings of internal compliance rules	Config.VECTORSTORE_DIR       |
-| `rejections_vectorstore`	 | Embeddings of user-rejected clauses	Config.REJECTIONS_VECTORSTORE_DIR |
+| **Collection**            | **Description**                                                        | **Location**                       |
+|---------------------------|------------------------------------------------------------------------|------------------------------------|
+| `policy_vectorstore`      | 	Embeddings of internal compliance                                     | rules	Config.VECTORSTORE_DIR       |
+| `rejections_vectorstore`	 | Embeddings of user-rejected clauses | 	Config.REJECTIONS_VECTORSTORE_DIR |
 
 Both are persisted locally via ChromaDB and synced to GCS to survive Cloud Run restarts.
 
