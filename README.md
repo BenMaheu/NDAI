@@ -7,6 +7,7 @@ legal teams to validate, reject, and comment on individual clauses through a use
 ---
 
 ## 🚀 Overview
+**APP URL** : https://nda-ui-961479672047.europe-west10.run.app
 
 ### ✳️ Core Features
 
