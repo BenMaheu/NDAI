@@ -8,7 +8,7 @@ on:
       - '.github/workflows/deploy_dev.yml'
 
 jobs:
-  deploy:
+  deploy-dev:
     runs-on: ubuntu-latest
 
     permissions:
@@ -50,6 +50,8 @@ jobs:
             --service-account=${{ secrets.GCP_SERVICE_ACCOUNT_EMAIL }} \
             --add-cloudsql-instances=${{ secrets.CLOUD_SQL_CONNECTION_NAME }} \
             --cpu=2 \
+            --min-instances=0 \
+            --memory=512Mi \
             --allow-unauthenticated \
             --set-env-vars=OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }} \
             --set-env-vars=GCS_BUCKET=${{ secrets.GCS_BUCKET }} \
