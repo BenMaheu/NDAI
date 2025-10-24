@@ -48,6 +48,9 @@ jobs:
             --image ${IMAGE} \
             --region $REGION \
             --platform managed \
+            --min-instances 0 \
+            --memory 512Mi \
+            --cpu=1 \
             --allow-unauthenticated \
             --service-account=${{ secrets.GCP_SERVICE_ACCOUNT_EMAIL }} \
             --set-env-vars=API_BASE=${{ secrets.API_BASE_URL }}
